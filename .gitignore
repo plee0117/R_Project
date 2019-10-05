@@ -1,5 +1,5 @@
-.txt
-.pdf
-.csv
-.xlsx
-.Rhistory
+*.txt
+*.pdf
+*.csv
+*.xlsx
+*.Rhistory
