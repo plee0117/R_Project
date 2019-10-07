@@ -18,9 +18,8 @@ shinyUI(fluidPage(
                         max = 50,
                         value = 30)
         ),
-
         mainPanel(
-            plotOutput("distPlot"),
+
             leafletOutput("mainmap")
         )
     )

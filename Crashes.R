@@ -7,6 +7,17 @@ library(maps)
 library(shiny)
 library(DT)
 library(shinydashboard)
+library(geojsonio)
+
+bikepathgeo <- geojson_read('./R_Project/Bicycle_Routes.geojson',what = 'sp')
+leaflet(bikepathgeo) %>% addTiles() %>% addPolylines()
+boroboundary <- geojson_read('.R_Project/Borough_Boundaries.geojson', what = 'sp')
+bikepriority <- geojson_read('./R_Project/VZV_Bike_Priority_Areas.geojson', what = 'sp')
+leaflet() %>% addTiles() %>% addPolylines(map = (bikepathgeo))
+?leaflet
+?addPolylines
+class(bikepathgeo)
+str(bikepathgeo)
 
 crashes <- read.csv('./R_Project/NYPD_Motor_Vehicle_Collisions_-_Crashes.csv', 
                     stringsAsFactors = F)
@@ -26,6 +37,7 @@ crashnona$DAYOFWEEK = weekdays(crashnona$DATE)
 
 write.csv(crashnona, file = './R_Project/cleancrash.csv')
 
+crashnona <- read.csv('./R_Project/cleancrash.csv', stringsAsFactors = F)
 
 
 crashnona %>% group_by(., BOROUGH) %>% summarise(n())
