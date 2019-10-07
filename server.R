@@ -2,7 +2,9 @@
 library(shiny)
 
 shinyServer(function(input, output) {
-
+    output$bikelane <- renderPrint({
+        input$bikelane # doens't do anything yet
+    })
     output$distPlot <- renderPlot({
         x    <- faithful[, 2]
         bins <- seq(min(x), max(x), length.out = input$bins + 1)

@@ -12,6 +12,8 @@ shinyUI(fluidPage(
             selectizeInput(inputId = 'year',label = "Select Year",
                            choices = sort(unique(crashnona$YEAR)),
                            selected = '2019'),
+            checkboxInput("bikelane", label = "Show Bikelanes", value = TRUE),
+            #bikelane doesn't do anything yet
             sliderInput("bins",
                         "Number of bins:",
                         min = 1,
