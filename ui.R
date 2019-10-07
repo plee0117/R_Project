@@ -7,7 +7,11 @@ shinyUI(fluidPage(
     sidebarLayout(
         sidebarPanel(
             selectizeInput(inputId = "boro",label = "Select Borough",
-                           choices = sort(unique(crashnona$BOROUGH)), selected = "BRONX"),
+                           choices = sort(unique(crashnona$BOROUGH)),
+                           selected = "BRONX"),
+            selectizeInput(inputId = 'year',label = "Select Year",
+                           choices = sort(unique(crashnona$YEAR)),
+                           selected = '2019'),
             sliderInput("bins",
                         "Number of bins:",
                         min = 1,

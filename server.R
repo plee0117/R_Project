@@ -9,7 +9,9 @@ shinyServer(function(input, output) {
         hist(x, breaks = bins, col = 'darkgray', border = 'white')
     })
     output$mainmap <- renderLeaflet({
-        crashnona %>% filter(., BOROUGH == input$boro) %>% leaflet() %>% 
+        crashnona %>% filter(., BOROUGH == input$boro) %>% 
+            filter(., YEAR == input$year) %>% 
+            leaflet() %>% 
             addTiles() %>% addCircles(~LONGITUDE,~LATITUDE)
     })
 
