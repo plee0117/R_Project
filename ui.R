@@ -1,4 +1,4 @@
-
+borochoice = c('Bronx','Brooklyn','Manhattan','Queens',"Staten Islan")
 
 shinyUI(fluidPage(
 
@@ -6,6 +6,8 @@ shinyUI(fluidPage(
 
     sidebarLayout(
         sidebarPanel(
+            selectizeInput(inputId = "boro",label = "Select Borough",
+                           choices = sort(unique(crashnona$BOROUGH)), selected = "BRONX"),
             sliderInput("bins",
                         "Number of bins:",
                         min = 1,
@@ -14,7 +16,8 @@ shinyUI(fluidPage(
         ),
 
         mainPanel(
-            plotOutput("distPlot")
+            plotOutput("distPlot"),
+            leafletOutput("mainmap")
         )
     )
 ))
