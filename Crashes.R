@@ -12,6 +12,8 @@ library(rgeos)
 library(rgdal)
 library(sp)
 library(sf)
+library(shinythemes)
+library(RColorBrewer)
 
 bikepathgeo <- geojson_read('./R_Project/Bicycle_Routes.geojson',what = 'sp')
 boroboundary <- geojson_read('./R_Project/Borough_Boundaries.geojson', what = 'sp')
@@ -24,10 +26,106 @@ Qcrash <- read.csv('./R_Project/Qcrash.csv', stringsAsFactors = F)
 Scrash <- read.csv('./R_Project/Scrash.csv', stringsAsFactors = F)
 Xcrash <- read.csv('./R_Project/Xcrash.csv', stringsAsFactors = F)
 
+library(rsconnect)
+rsconnect::deployApp('./R_Project')
+
+# above into global eventually
+
+write.csv(Xcrash, file = './R_Project/Xcrash.csv', row.names = F)
+
+Kcrash <- Kcrash %>% select(., -starts_with('X'))
+
+pickboro<- function(boroname){
+  switch (boroname,
+          'Bronx' = Xcrash,
+          'Brooklyn' = Kcrash,
+          'Manhattan' = Mcrash,
+          'Queens' = Qcrash,
+          'Staten Island' = Scrash)
+}
+
+
+
+
+
+asdf = c(1,2,3,4)
+qwer = c(4,3,2,1)
+rbind(asdf,NULL,qwer,NULL,qwer) %>% unique()
+
+rm(Kcrashtest)
+
+
+colnames(Xcrash)
+Scrashtest$ATE <- ifelse(
+  Scrashtest$CONTRIBUTING.FACTOR.VEHICLE.1 %in% 
+    AccReason[AccReason$category == 'Environmental','reason'],'Y',
+  Scrashtest$ATE
+)
+
+head(Xcrashtest %>% filter(., ATH =='Y' | ATV == 'Y' | ATE == 'Y') %>%  
+       select(., starts_with('AT')),50)
+
+
+Xcrashtest %>% filter(., ATH == 'Y') %>% summarise(n())
+
+AccReason[AccReason$category == 'Environmental','reason']
+
+for (idx in c(1:nrow(Xcrashtest))) {
+  if (Xcrashtest$CONTRIBUTING.FACTOR.VEHICLE.1[idx] %in% 
+      AccReason[AccReason$category == 'Human','reason']) {
+    Xcrashtest$ATH[idx] = 'Y'
+  }
+}
+head(Xcrashtest)
+Xcrashtest %>% rename(.,ATH = "ATH")
+
+rm(idx)
+
+
+
+colnames(Xcrash)
+
+Xcrash %>% filter(., BOROUGH != 'BRONX')
 Scrash <- crashnona %>% filter(., BOROUGH == 'STATEN ISLAND')
-write.csv(Scrash, file = './R_Project/Scrash.csv')
+write.csv(Qcrashtest, file = './R_Project/Qcrash.csv')
+
+Kcrash %>% left_join(., AccReason, 
+                      by = c('CONTRIBUTING.FACTOR.VEHICLE.1' = 'reason')) %>% 
+  group_by(., YEAR, category) %>% ggplot(.,aes(x = YEAR)) + 
+  geom_bar(aes(group = category, fill = category), position = 'fill')
+
+Kcrash %>% group_by(., YEAR, CONTRIBUTING.FACTOR.VEHICLE.1) %>% 
+  summarise(., n())
+
+Kcrash %>% filter(., CONTRIBUTING.FACTOR.VEHICLE.1 != 'Unspecified' &
+                    CONTRIBUTING.FACTOR.VEHICLE.2 != 'Unspecified'  &
+                  CONTRIBUTING.FACTOR.VEHICLE.3 != 'Unspecified' ) %>% 
+  group_by(., YEAR) %>% summarise(.,n())
+
+Kcrash %>% filter(., CONTRIBUTING.FACTOR.VEHICLE.1 == 'Unspecified') %>% 
+  group_by(., YEAR) %>% summarise(.,n())
+Kcrash %>% filter(., YEAR == '2019') %>% summarise(.,n())
 
 
+
+
+
+
+boro2 = 'Bronx'
+year2019 = 2019
+switch (boro2,
+        'Bronx' = Xcrash,
+        'Brooklyn' = Kcrash,
+        'Manhattan' = Mcrash,
+        'Queens' = Qcrash,
+        'Staten Island' = Scrash) %>% filter(., YEAR == year2019)
+
+Kcrash %>% filter(., NUMBER.OF.CYCLIST.INJURED == 0 &
+                    NUMBER.OF.CYCLIST.KILLED >0) %>% summarise(.,n())
+colnames(Kcrash)
+colnames(AccReason)
+AccReason$reason
+?inner_join
 crashnona %>% filter(., TIME >"6:30" & TIME < '9:00') %>% filter(., BOROUGH == "BROOKLYN") %>% 
   ggplot(aes(x = YEAR)) + geom_bar(aes(group = DAYOFWEEK, fill = DAYOFWEEK))
 
