@@ -7,16 +7,18 @@ navbarPage("Crashes",
     ),
     tabPanel("Tables",
         sidebarLayout(
-            sidbarPanel(
+            sidebarPanel(
                 selectizeInput(inputId = "boro",label = "Select Borough",
                                choices = borochoice,
                                selected = "Brooklyn"),
                 selectizeInput(inputId = 'year',label = "Select Year",
                                choices = sort(unique(Scrash$YEAR)),
-                               selected = '2019')
+                               selected = '2019'),
+                checkboxInput("pedinjt", label = "Pedestrian Injuries", value = F),
+                checkboxInput("bikeinjt", label = "Cyclist Injuries", value = F)
             ),
             mainPanel(
-                
+                plotOutput('graph')
             )
         )    
     ),
@@ -36,8 +38,12 @@ navbarPage("Crashes",
                                    selected = c('ATH','ATE','ATV')),
                 checkboxInput("bikelane", label = "Show Bikelanes", value = F),
                 checkboxInput("bikePZ", label = "Show Bike Priority Zones", value = F),
-                checkboxInput("pedinj", label = "Show Pedestrian Injuries", value = F),
-                checkboxInput("bikeinj", label = "Show Cyclist Injuries", value = T)
+                checkboxGroupInput("injtype", label = h4("Injuries and Deaths"), 
+                                   choices = list("Pedestrian" = 'pedinj', 
+                                                  "Cyclist" = 'cycinj'),
+                                   selected = c())
+                # checkboxInput("pedinj", label = "Show Pedestrian Injuries", value = F),
+                # checkboxInput("bikeinj", label = "Show Cyclist Injuries", value = T)
                 
             ),
             mainPanel(

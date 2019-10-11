@@ -24,21 +24,28 @@ shinyServer(function(input, output) {
                 } else NULL) %>% 
             unique() -> temporary2
         } else temporary -> temporary2
-        if (input$bikeinj) {
-            temporary2 %>% filter(., NUMBER.OF.CYCLIST.INJURED > 0 |
-                                      NUMBER.OF.CYCLIST.KILLED > 0) ->
-                temporary3
+        if ('pedinj' %in% input$injtype) {
+            if ('cycinj' %in% input$injtype) {
+                temporary2 %>% filter(., NUMBER.OF.CYCLIST.INJURED > 0 |
+                                          NUMBER.OF.CYCLIST.KILLED > 0 |
+                                          NUMBER.OF.PEDESTRIANS.INJURED > 0 |
+                                          NUMBER.OF.PEDESTRIANS.KILLED > 0) -> 
+                    temporary3
+            } else{
+                temporary2 %>% filter(., NUMBER.OF.PEDESTRIANS.INJURED > 0 |
+                                          NUMBER.OF.PEDESTRIANS.KILLED > 0) ->
+                    temporary3                
+            }
         } else{
-            temporary2 -> temporary3
+            if ('cycinj' %in% input$injtype) {
+                temporary2 %>% filter(., NUMBER.OF.CYCLIST.INJURED > 0 |
+                                          NUMBER.OF.CYCLIST.KILLED > 0) ->
+                    temporary3
+            }else{
+                temporary2 -> temporary3
+            }
         }
-        if (input$pedinj) {
-            temporary3 %>% filter(., NUMBER.OF.PEDESTRIANS.INJURED > 0 |
-                                      NUMBER.OF.PEDESTRIANS.KILLED > 0) ->
-                temporary4
-        } else{
-            temporary3 -> temporary4
-        }
-        temporary4
+        temporary3
     })
     
     #testing elements from here
@@ -60,7 +67,9 @@ shinyServer(function(input, output) {
             leaflet() %>% addTiles() %>%
              addCircles(data = markthese(),
                         weight = 1, radius = markthese()$NUMBER.OF.CYCLIST.INJURED*200 +
-                            markthese()$NUMBER.OF.CYCLIST.KILLED*1000,
+                            markthese()$NUMBER.OF.PEDESTRIANS.INJURED*250 +
+                            markthese()$NUMBER.OF.CYCLIST.KILLED*1000 +
+                            markthese()$NUMBER.OF.PEDESTRIANS.KILLED*1250,
                         color = "Red"
                         ) 
     })
