@@ -1,31 +1,35 @@
 
-
-
 shinyServer(function(input, output) {
 
     markthese <- reactive({
-        switch (input$boro,
+        
+        # pick the dataframe to use by borough and year
+        switch (input$boroM, 
             'Bronx' = Xcrash,
             'Brooklyn' = Kcrash,
             'Manhattan' = Mcrash,
             'Queens' = Qcrash,
             'Staten Island' = Scrash) %>% 
-            filter(., YEAR == input$year) -> temporary
-        if (length(input$accreason) > 0) {
+            filter(., YEAR == input$yearM) -> temporary
+        
+        # pick the type of accident causes
+        if (length(input$accreasonM) > 0) {
             rbind(
-                if ('ATH' %in% input$accreason) {
+                if ('ATH' %in% input$accreasonM) {
                     temporary %>% filter(., ATH == 'Y')
                 } else NULL,
-                if ('ATV' %in% input$accreason) {
+                if ('ATV' %in% input$accreasonM) {
                     temporary %>% filter(., ATV == 'Y')
                 } else NULL,
-                if ('ATE' %in% input$accreason) {
+                if ('ATE' %in% input$accreasonM) {
                     temporary %>% filter(., ATE == 'Y')
                 } else NULL) %>% 
             unique() -> temporary2
         } else temporary -> temporary2
-        if ('pedinj' %in% input$injtype) {
-            if ('cycinj' %in% input$injtype) {
+        
+        # filter by the type of injuries and if nothing is selected -> all acc
+        if ('pedinj' %in% input$injtypeM) {
+            if ('cycinj' %in% input$injtypeM) {
                 temporary2 %>% filter(., NUMBER.OF.CYCLIST.INJURED > 0 |
                                           NUMBER.OF.CYCLIST.KILLED > 0 |
                                           NUMBER.OF.PEDESTRIANS.INJURED > 0 |
@@ -37,7 +41,7 @@ shinyServer(function(input, output) {
                     temporary3                
             }
         } else{
-            if ('cycinj' %in% input$injtype) {
+            if ('cycinj' %in% input$injtypeM) {
                 temporary2 %>% filter(., NUMBER.OF.CYCLIST.INJURED > 0 |
                                           NUMBER.OF.CYCLIST.KILLED > 0) ->
                     temporary3
@@ -48,23 +52,50 @@ shinyServer(function(input, output) {
         temporary3
     })
     
-    #testing elements from here
-    boroname <- reactive({
-        switch (input$boro,
+    
+    graphthese <- reactive({
+        
+        # pick the dataframe to use by borough and year
+        switch (input$boroG,
                 'Bronx' = Xcrash,
                 'Brooklyn' = Kcrash,
                 'Manhattan' = Mcrash,
                 'Queens' = Qcrash,
-                'Staten Island' = Scrash) 
+                'Staten Island' = Scrash) %>% 
+            filter(., YEAR == input$yearG) -> temporary4
+        
+        # filter by injury type to produce graphs
+        if ('pedinj' %in% input$injtypeG) {
+            if ('cycinj' %in% input$injtypeG) {
+                temporary4 %>% filter(., NUMBER.OF.CYCLIST.INJURED > 0 |
+                                          NUMBER.OF.CYCLIST.KILLED > 0 |
+                                          NUMBER.OF.PEDESTRIANS.INJURED > 0 |
+                                          NUMBER.OF.PEDESTRIANS.KILLED > 0) -> 
+                    temporary5
+            } else{
+                temporary4 %>% filter(., NUMBER.OF.PEDESTRIANS.INJURED > 0 |
+                                          NUMBER.OF.PEDESTRIANS.KILLED > 0) ->
+                    temporary5
+            }
+        } else{
+            if ('cycinj' %in% input$injtypeG) {
+                temporary4 %>% filter(., NUMBER.OF.CYCLIST.INJURED > 0 |
+                                          NUMBER.OF.CYCLIST.KILLED > 0) ->
+                    temporary5
+            }else{
+                temporary4 -> temporary5
+            }
+        }
+        
+        # pick top 10 accident reasons
+        temporary5 %>% pivot_longer(., cols = c(ATH, ATV, ATE), AccType) %>% 
+            group_by(AccType) ->
+            temporary6
+        temporary6
     })
-    output$acccount <- renderText({
-        c(input$boro,input$year,input$pedinj,input$bikeinj,nrow(boroname()),
-        markthese() %>% summarise(., n())[[1]][1]
-        )
-    })
-    #testing elements up to here
+    
     output$mainmap <- renderLeaflet({
-            leaflet() %>% addTiles() %>%
+        leaflet() %>% addTiles() %>% addProviderTiles('OpenMapSurfer.Roads') %>%
              addCircles(data = markthese(),
                         weight = 1, radius = markthese()$NUMBER.OF.CYCLIST.INJURED*200 +
                             markthese()$NUMBER.OF.PEDESTRIANS.INJURED*250 +
@@ -73,27 +104,49 @@ shinyServer(function(input, output) {
                         color = "Red"
                         ) 
     })
-    observeEvent(input$bikePZ, {
+    output$maingraph <- renderGvis({
+        gvisColumnChart(
+            data = graphthese(), xvar = graphthese()$AccType
+        )
+    })
+
+    observeEvent({input$bikePZM
+                   input$injtypeM}, {
         proxy <- leafletProxy('mainmap')
-        if (input$bikePZ) {
+        if (input$bikePZM) {
             proxy %>%
-                addPolygons(data = bikepriority, layerId = LETTERS[1:20],
+                addPolygons(data = bikepriority, layerId = LETTERS[1:10],
                              weight = 1, color = 'blue')
         } else{
             proxy %>%
-                removeShape(layerId = LETTERS[1:20])
+                removeShape(layerId = LETTERS[1:10])
         }
     })
-    
+
+    #testing elements from here
+    boroname <- reactive({
+        switch (input$boroM,
+                'Bronx' = Xcrash,
+                'Brooklyn' = Kcrash,
+                'Manhattan' = Mcrash,
+                'Queens' = Qcrash,
+                'Staten Island' = Scrash) 
+    })
+    output$acccount <- renderText({
+        c(input$boroM,input$yearM,input$pedinjM,input$bikeinjM,nrow(boroname()),
+          markthese() %>% summarise(., n())[[1]][1]
+        )
+    })
+    #testing elements up to here    
 
     # observeEvent(input$bikelane, {
     #     proxy <- leafletProxy('mainmap')
     #     if (input$bikelane) {
-    #         proxy %>%  
-    #             addPolylines(data = bikepathgeo, layerId = 'bikelanelayer', 
+    #         proxy %>%
+    #             addPolylines(data = bikepathgeo, layerId = 'bikelanelayer',
     #                          weight = 1, color = 'blue')
     #     } else{
-    #         proxy %>% 
+    #         proxy %>%
     #             removeShape(layerId = 'bikelanelayer')
     #     }
     # })

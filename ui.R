@@ -5,46 +5,43 @@ navbarPage("Crashes",
     tabPanel("Introduction"
     
     ),
-    tabPanel("Tables",
+    tabPanel("Graphs",
         sidebarLayout(
             sidebarPanel(
-                selectizeInput(inputId = "boro",label = "Select Borough",
+                selectizeInput(inputId = "boroG",label = "Select Borough",
                                choices = borochoice,
                                selected = "Brooklyn"),
-                selectizeInput(inputId = 'year',label = "Select Year",
+                selectizeInput(inputId = 'yearG',label = "Select Year",
                                choices = sort(unique(Scrash$YEAR)),
                                selected = '2019'),
-                checkboxInput("pedinjt", label = "Pedestrian Injuries", value = F),
-                checkboxInput("bikeinjt", label = "Cyclist Injuries", value = F)
+                checkboxInput("pedinjG", label = "Pedestrian Injuries", value = F),
+                checkboxInput("bikeinjG", label = "Cyclist Injuries", value = F)
             ),
             mainPanel(
-                plotOutput('graph')
+                htmlOutput('maingraph')
             )
         )    
     ),
     tabPanel("Maps",
         sidebarLayout(
             sidebarPanel(
-                selectizeInput(inputId = "boro",label = "Select Borough",
+                selectizeInput(inputId = "boroM",label = "Select Borough",
                                choices = borochoice,
                                selected = "Brooklyn"),
-                selectizeInput(inputId = 'year',label = "Select Year",
+                selectizeInput(inputId = 'yearM',label = "Select Year",
                                choices = sort(unique(Scrash$YEAR)),
                                selected = '2019'),
-                checkboxGroupInput("accreason", label = h4("Accident Causes"), 
+                checkboxGroupInput("accreasonM", label = h4("Accident Causes"), 
                                    choices = list("Human" = 'ATH', 
                                                   "Vehicular" = 'ATV', 
                                                   "Environmental" = 'ATE'),
                                    selected = c('ATH','ATE','ATV')),
-                checkboxInput("bikelane", label = "Show Bikelanes", value = F),
-                checkboxInput("bikePZ", label = "Show Bike Priority Zones", value = F),
-                checkboxGroupInput("injtype", label = h4("Injuries and Deaths"), 
+                checkboxInput("bikelaneM", label = "Show Bikelanes", value = F),
+                checkboxInput("bikePZM", label = "Show Bike Priority Zones", value = F),
+                checkboxGroupInput("injtypeM", label = h4("Injuries and Deaths"), 
                                    choices = list("Pedestrian" = 'pedinj', 
                                                   "Cyclist" = 'cycinj'),
                                    selected = c())
-                # checkboxInput("pedinj", label = "Show Pedestrian Injuries", value = F),
-                # checkboxInput("bikeinj", label = "Show Cyclist Injuries", value = T)
-                
             ),
             mainPanel(
                 textOutput("acccount"),

@@ -14,6 +14,7 @@ library(sp)
 library(sf)
 library(shinythemes)
 library(RColorBrewer)
+library(tidyr)
 
 bikepathgeo <- geojson_read('./R_Project/Bicycle_Routes.geojson',what = 'sp')
 boroboundary <- geojson_read('./R_Project/Borough_Boundaries.geojson', what = 'sp')
@@ -26,14 +27,13 @@ Qcrash <- read.csv('./R_Project/Qcrash.csv', stringsAsFactors = F)
 Scrash <- read.csv('./R_Project/Scrash.csv', stringsAsFactors = F)
 Xcrash <- read.csv('./R_Project/Xcrash.csv', stringsAsFactors = F)
 
-library(rsconnect)
-rsconnect::deployApp('./R_Project')
 
-# above into global eventually
 
-write.csv(Xcrash, file = './R_Project/Xcrash.csv', row.names = F)
+# above into global
 
-Kcrash <- Kcrash %>% select(., -starts_with('X'))
+write.csv(AccReason, file = './R_Project/AccReason.csv', row.names = F)
+
+
 
 pickboro<- function(boroname){
   switch (boroname,
@@ -45,12 +45,13 @@ pickboro<- function(boroname){
 }
 
 
+Scrash %>% pivot_longer(., cols = c(ATH, ATV, ATE), names_to = 'AccType') %>% 
+  group_by(AccType) %>% arrange()
 
 
 
-asdf = c(1,2,3,4)
-qwer = c(4,3,2,1)
-rbind(asdf,NULL,qwer,NULL,qwer) %>% unique()
+
+
 
 rm(Kcrashtest)
 
@@ -199,7 +200,7 @@ crashnona %>% mutate(., MONTH = str_sub(DATE,1,2), DAY = str_sub(DATE,4,5),
 crashnona$DATE = as.Date(crashnona$DATE, format = '%m/%d/%Y')
 crashnona$DAYOFWEEK = weekdays(crashnona$DATE)
 
-write.csv(crashnona, file = './R_Project/cleancrash2.csv')
+
 
 
 
@@ -245,10 +246,35 @@ crashnona@proj4string
 
 slotNames(boroboundary)
 boroboundary$polygons
+leaflet() %>% addTiles() %>% 
+  addPolygons(data = boroboundary[boroboundary@data$boro_name == 'Bronx'])
+head(boroboundary[boroboundary@data$boro_name == 'Bronx']$coords)
+slot(object = boroboundary,name = 'data')
+
+boroboundary@polygons[boroboundary@data$boro_name[]=='Bronx']
+
+
+colnames(boroboundary)
+class(boroboundary@polygons)
+
+?is.element
+leaflet() %>% addTiles() %>% addPolygons(data = boroboundary, layerId = LETTERS[1:5]) %>% 
+  removeShape(layerId = LETTERS[1:4])
+
+leaflet() %>% addTiles() %>% addPolygons(data = bikepriority$boro_cd_cod['BK 12'])
+
+
+
+zipcodes <- st_read('./R_Project/ZIP_CODE_040114.shp')
+
+?readOGR
 dim(boroboundary)
 head(boroboundary@polygons[1][[1]])
 head(boroboundary[2,3:3])
 name(boroboundary)
+slotNames(boroboundary)
+boroboundary$boro_name
+
 
 str(boroboundary)
 crs(boroboundary)
