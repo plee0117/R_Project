@@ -15,6 +15,7 @@ library(sf)
 library(shinythemes)
 library(RColorBrewer)
 library(tidyr)
+library(data.table)
 
 bikepathgeo <- geojson_read('./R_Project/Bicycle_Routes.geojson',what = 'sp')
 boroboundary <- geojson_read('./R_Project/Borough_Boundaries.geojson', what = 'sp')
@@ -31,7 +32,8 @@ Xcrash <- read.csv('./R_Project/Xcrash.csv', stringsAsFactors = F)
 
 # above into global
 
-write.csv(AccReason, file = './R_Project/AccReason.csv', row.names = F)
+Xcrash <- Xcrash %>% select(., -ATH, -ATV, -ATE)
+write.csv(Xcrash, file = './R_Project/Xcrash.csv', row.names = F)
 
 
 
@@ -44,16 +46,72 @@ pickboro<- function(boroname){
           'Staten Island' = Scrash)
 }
 
+Kcrash %>% filter(., CONTRIBUTING.FACTOR.VEHICLE.1 !='1' &
+                     CONTRIBUTING.FACTOR.VEHICLE.2 !='1' &
+                     CONTRIBUTING.FACTOR.VEHICLE.3 !='1' & 
+                     CONTRIBUTING.FACTOR.VEHICLE.4 !='1' &
+                     CONTRIBUTING.FACTOR.VEHICLE.5 !='1') ->
+  Kcrash
+Kcrash -> Kcrashtest
+Xcrash$ATE <- ifelse(Xcrash$ATE == 'ATE', 'N', Xcrash$ATE)
 
-Scrash %>% pivot_longer(., cols = c(ATH, ATV, ATE), names_to = 'AccType') %>% 
-  group_by(AccType) %>% arrange()
+Scrash %>%  
+  pivot_longer(., cols =  c(CONTRIBUTING.FACTOR.VEHICLE.1, 
+                            CONTRIBUTING.FACTOR.VEHICLE.2,
+                            CONTRIBUTING.FACTOR.VEHICLE.3, 
+                            CONTRIBUTING.FACTOR.VEHICLE.4, 
+                            CONTRIBUTING.FACTOR.VEHICLE.5), 
+               names_to = 'AccFactor', values_to = 'AccFactorVal') %>% 
+  filter(., AccFactorVal != '') %>% filter(., AccFactorVal != 'Unspecified') %>% 
+  inner_join(., AccReason, by = c('AccFactorVal' = 'reason')) %>% 
+  filter(., category == 'Human') %>% group_by(., AccFactorVal) %>% 
+  summarise(., No_Acc = n()) %>% arrange(., desc(No_Acc)) %>% top_n(., 5) %>% 
+  ggplot(aes(x = AccFactorVal))+ geom_bar(stat = 'identity',aes(y = No_Acc))
+
+?geom_bar
+  group_by(., category, AccFactorVal) %>% 
+  ggplot(aes(x = category)) + geom_bar(aes(group = AccFactorVal), position = 'dodge')
 
 
+AccReason$reason
+#->
+ asdf %>% filter(., AccTypeVal != "") %>% summarise(n())
+ asdf %>% filter(., AccFactorVal != "") %>% summarise(n())
+ head(asdf %>% filter(., AccFactorVal == "" & AccTypeVal != "") %>% 
+        select(., AccFactorVal, AccTypeVal),1) #%>% summarise(n())
+
+asdf %>% anti_join(., AccReason, by =c("AccFactorVal" = "reason")) %>% 
+  select(., AccFactorVal) %>% summarise(., n())
+
+  qwer
+
+qwer
+?anti_join
 
 
+  
+  
+  
+    group_by(AccType) %>% arrange(AccType)
+
+?complete.cases
+
+AccReason
+AccFactorColumn = c(CONTRIBUTING.FACTOR.VEHICLE.1,
+                      CONTRIBUTING.FACTOR.VEHICLE.2,
+                      CONTRIBUTING.FACTOR.VEHICLE.3,
+                      CONTRIBUTING.FACTOR.VEHICLE.4,
+                      CONTRIBUTING.FACTOR.VEHICLE.5)
+Scrash %>% 
+  filter(., YEAR == '2019') %>% 
+  filter(., NUMBER.OF.CYCLIST.INJURED > 0 |NUMBER.OF.CYCLIST.KILLED > 0 | 
+           NUMBER.OF.PEDESTRIANS.INJURED > 0 | NUMBER.OF.PEDESTRIANS.KILLED > 0) %>% 
+  spread()
 
 
-rm(Kcrashtest)
+?pivot_wider
+
+
 
 
 colnames(Xcrash)

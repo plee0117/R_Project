@@ -87,9 +87,17 @@ shinyServer(function(input, output) {
             }
         }
         
-        # pick top 10 accident reasons
-        temporary5 %>% pivot_longer(., cols = c(ATH, ATV, ATE), AccType) %>% 
-            group_by(AccType) ->
+        # pick top 5 accident reasons
+        temporary5 %>%   pivot_longer(., cols =  c(CONTRIBUTING.FACTOR.VEHICLE.1, 
+                                                   CONTRIBUTING.FACTOR.VEHICLE.2,
+                                                   CONTRIBUTING.FACTOR.VEHICLE.3, 
+                                                   CONTRIBUTING.FACTOR.VEHICLE.4, 
+                                                   CONTRIBUTING.FACTOR.VEHICLE.5), 
+                                      names_to = 'AccFactor', values_to = 'AccFactorVal') %>% 
+            filter(., AccFactorVal != '') %>% filter(., AccFactorVal != 'Unspecified') %>% 
+            inner_join(., AccReason, by = c('AccFactorVal' = 'reason')) %>% 
+            filter(., category == 'Human') %>% group_by(., AccFactorVal) %>% 
+            summarise(., No_Acc = n()) %>% arrange(., desc(No_Acc)) %>% top_n(., 5) ->
             temporary6
         temporary6
     })
@@ -106,7 +114,7 @@ shinyServer(function(input, output) {
     })
     output$maingraph <- renderGvis({
         gvisColumnChart(
-            data = graphthese(), xvar = graphthese()$AccType
+            data = graphthese(), xvar = graphthese()$AccFactorVal, yvar = No_Acc
         )
     })
 
