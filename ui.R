@@ -43,9 +43,15 @@ navbarPage("NYC Vision Zero",
                                    selected = c())
             ),
             mainPanel(
-                h4(textOutput("TotalIncidents")),
+                
+                fluidRow(align = 'left',
+                    h5(textOutput("TotalIncidents"))
+                ),
                 htmlOutput('AccidentTypes'),
-                htmlOutput('MainGraph')
+                fluidRow(align = 'center',
+                         h5(textOutput("LCTitle"))
+                ),
+                htmlOutput('LeadingCauses')
             )
         )
     ),

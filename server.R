@@ -114,10 +114,10 @@ shinyServer(function(input, output) {
         temporary6
     })
 
-    # Summary reactive ####
+    # Summary1 reactive ####
     # pick the dataframe to use by borough
     # select all incidents    
-    SummaryTab <- reactive({
+    AllCollision <- reactive({
         switch (input$boroS, 
                 'Bronx' = Xcrash,
                 'Brooklyn' = Kcrash,
@@ -128,44 +128,48 @@ shinyServer(function(input, output) {
             group_by(.,YEAR) %>% 
             summarise(., Total = n()) -> totalcrash
         borocrash  %>% filter(., NUMBER.OF.PEDESTRIANS.INJURED >0 |
-                                  NUMBER.OF.PEDESTRIANS.INJURED > 0) %>% 
+                                  NUMBER.OF.PEDESTRIANS.KILLED > 0) %>% 
             group_by(., YEAR) %>% 
             summarise(., Pedestrians = n()) -> pedcrash
         borocrash  %>% filter(., NUMBER.OF.CYCLIST.INJURED >0 |
-                                  NUMBER.OF.CYCLIST.INJURED > 0) %>% 
+                                  NUMBER.OF.CYCLIST.KILLED > 0) %>% 
             group_by(., YEAR) %>% 
             summarise(., Cyclists = n()) -> cyccrash
         inner_join(totalcrash, pedcrash, by = 'YEAR') %>%
             inner_join(., cyccrash, by = 'YEAR') %>% 
             mutate(.,Year = as.character(YEAR))
-    })    
+    })
+    # Summary2 reactive ####
+    # pick the dataframe to use by borough
+    # select only incidents resulting in ped and cyc injuries and deaths  
+    IFCollision <- reactive({
+        switch (input$boroS, 
+                'Bronx' = Xcrash,
+                'Brooklyn' = Kcrash,
+                'Manhattan' = Mcrash,
+                'Queens' = Qcrash,
+                'Staten Island' = Scrash) -> borocrash
+        borocrash  %>% filter(., NUMBER.OF.PEDESTRIANS.INJURED >0 |
+                                  NUMBER.OF.PEDESTRIANS.KILLED > 0) %>% 
+            group_by(., YEAR) %>% 
+            summarise(., Pedestrians = n()) -> pedcrash
+        borocrash  %>% filter(., NUMBER.OF.CYCLIST.INJURED >0 |
+                                  NUMBER.OF.CYCLIST.KILLED > 0) %>% 
+            group_by(., YEAR) %>% 
+            summarise(., Cyclists = n()) -> cyccrash
+        borocrash  %>% filter(., NUMBER.OF.PEDESTRIANS.KILLED > 0) %>% 
+            group_by(., YEAR) %>% 
+            summarise(., Pedestrian_Fatalities = n()) -> peddeath
+        borocrash  %>% filter(., NUMBER.OF.CYCLIST.KILLED > 0) %>% 
+            group_by(., YEAR) %>% 
+            summarise(., Cyclist_Fatalities = n()) -> cycdeath
+        inner_join(pedcrash, peddeath, by = 'YEAR') %>%
+            inner_join(., cyccrash, by = 'YEAR') %>% 
+            inner_join(., cycdeath, by = 'YEAR') %>%
+            mutate(.,Year = as.character(YEAR))
+    })
     
 
-    
-    # Graph Tab outputs ####
-    output$MainGraph <- renderGvis({
-        graphthese()%>% group_by(., AccFactorVal) %>% 
-            summarise(., No_Accidents = n()) %>% 
-            arrange(., desc(No_Accidents)) %>% top_n(., 5) -> top5_acc
-        gvisColumnChart(
-            data = top5_acc, xvar = 'AccFactorVal', 
-            yvar = 'No_Accidents', options = list(legend= 'none')
-        )
-    })
-    output$TotalIncidents <- renderText({
-        graphthese() %>% summarise(., sum(n())) -> showthis
-        c("Total number of incidents",
-           as.data.frame(showthis)[1,1]
-           )
-    })
-    output$AccidentTypes <-renderGvis({
-        graphthese() %>%group_by(category) %>% 
-            summarise( total = sum(n())) -> piedata
-        gvisPieChart(
-            data = piedata, labelvar = "category", numvar = "total",
-            options = list(legend = 'none')
-        )
-    })
     
     # SummaryTab outputs ####
     # All collisions ####
@@ -174,14 +178,14 @@ shinyServer(function(input, output) {
     })
     output$TimeLineA <-renderGvis({
         gvisLineChart(
-            data = SummaryTab(), xvar = "Year", 
+            data = AllCollision(), xvar = "Year", 
             yvar = c("Total", "Pedestrians", "Cyclists"),
             options = list(legend = 'bottom', focusTarget = 'category')
         )
     })
     output$TimePercentA <-renderGvis({
         gvisColumnChart(
-            data = SummaryTab(), xvar = "Year", 
+            data = AllCollision(), xvar = "Year", 
             yvar = c("Total", "Pedestrians", "Cyclists"),
             options = list(legend = 'none', isStacked = 'percent', 
                            focusTarget = 'category')
@@ -192,21 +196,50 @@ shinyServer(function(input, output) {
         "Collisions Resulting in Injuries and Fatalities"
     })
     output$TimeLineIF <-renderGvis({
-        SummaryTab() %>% 
         gvisLineChart(
-            data = SummaryTab(), xvar = "Year", 
-            yvar = c("Total", "Pedestrians", "Cyclists"),
+            data = IFCollision(), xvar = "Year", 
+            yvar = c("Pedestrians", "Pedestrian_Fatalities","Cyclists", "Cyclist_Fatalities"),
             options = list(legend = 'bottom', focusTarget = 'category')
         )
     })
     output$TimePercentIF <-renderGvis({
         gvisColumnChart(
-            data = SummaryTab(), xvar = "Year", 
-            yvar = c("Total", "Pedestrians", "Cyclists"),
+            data = IFCollision(), xvar = "Year", 
+            yvar = c("Pedestrians", "Pedestrian_Fatalities","Cyclists", "Cyclist_Fatalities"),
             options = list(legend = 'none', isStacked = 'percent', 
                            focusTarget = 'category')
         )
     })
+    
+    # Graph Tab outputs ####
+    output$TotalIncidents <- renderText({
+        graphthese() %>% summarise(., sum(n())) -> showthis
+        c("Number of incidents:",
+          as.data.frame(showthis)[1,1]
+        )
+    })
+    output$AccidentTypes <-renderGvis({
+        graphthese() %>%group_by(category) %>% 
+            summarise( total = sum(n())) -> piedata
+        gvisPieChart(
+            data = piedata, labelvar = "category", numvar = "total",
+            options = list(legend = 'none')
+        )
+    })
+    output$LCTitle <- renderText({
+        c("Leading Cause of Accidents")
+    })
+    output$LeadingCauses <- renderGvis({
+        graphthese()%>% group_by(., AccFactorVal) %>% 
+            summarise(., No_Accidents = n()) %>% 
+            arrange(., desc(No_Accidents)) %>% top_n(., 5) -> top5_acc
+        gvisColumnChart(
+            data = top5_acc, xvar = 'AccFactorVal', 
+            yvar = 'No_Accidents', 
+            options = list(legend= 'none')
+        )
+    })
+
     
     # Map Tab outputs ####
     output$MainMap <- renderLeaflet({
