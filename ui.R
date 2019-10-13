@@ -1,9 +1,19 @@
 borochoice = c('Bronx','Brooklyn','Manhattan','Queens',"Staten Island")
 
 shinyUI(fluidPage(theme = shinytheme('journal'),
-navbarPage("Crashes",
-    tabPanel("Introduction"
-    
+navbarPage("NYC Vision Zero",
+    tabPanel("Introduction",
+        tabsetPanel(type = "pills",
+            tabPanel("History",
+                     #use h4 or smaller
+                     ), 
+            tabPanel("Summary",
+                     
+                     ),
+            tabPanel("About the Author",
+                     
+                     )
+        )
     ),
     tabPanel("Graphs",
         sidebarLayout(
@@ -14,13 +24,19 @@ navbarPage("Crashes",
                 selectizeInput(inputId = 'yearG',label = "Select Year",
                                choices = sort(unique(Scrash$YEAR)),
                                selected = '2019'),
-                checkboxInput("pedinjG", label = "Pedestrian Injuries", value = F),
-                checkboxInput("bikeinjG", label = "Cyclist Injuries", value = F)
+                checkboxGroupInput("injtypeG", label = h4("Injuries and Deaths"), 
+                                   choices = list("Pedestrian" = 'pedinj', 
+                                                  "Cyclist" = 'cycinj'),
+                                   selected = c())
             ),
             mainPanel(
-                htmlOutput('maingraph')
+                htmlOutput('TimeLine'),
+                htmlOutput('TimePercent'),
+                h3(textOutput("TotalIncidents")),
+                htmlOutput('AccidentTypes'),
+                htmlOutput('MainGraph')
             )
-        )    
+        )
     ),
     tabPanel("Maps",
         sidebarLayout(
@@ -32,10 +48,10 @@ navbarPage("Crashes",
                                choices = sort(unique(Scrash$YEAR)),
                                selected = '2019'),
                 checkboxGroupInput("accreasonM", label = h4("Accident Causes"), 
-                                   choices = list("Human" = 'ATH', 
-                                                  "Vehicular" = 'ATV', 
-                                                  "Environmental" = 'ATE'),
-                                   selected = c('ATH','ATE','ATV')),
+                                   choices = list("Human" = 'Human', 
+                                                  "Vehicular" = 'Vehicular', 
+                                                  "Environmental" = 'Environmental'),
+                                   selected = c('Human','Vehicular','Environmental')),
                 checkboxInput("bikelaneM", label = "Show Bikelanes", value = F),
                 checkboxInput("bikePZM", label = "Show Bike Priority Zones", value = F),
                 checkboxGroupInput("injtypeM", label = h4("Injuries and Deaths"), 
@@ -45,10 +61,9 @@ navbarPage("Crashes",
             ),
             mainPanel(
                 textOutput("acccount"),
-                leafletOutput("mainmap")
+                leafletOutput("MainMap")
             )
         )
     )
-    
 )
 ))

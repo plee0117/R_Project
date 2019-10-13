@@ -55,7 +55,7 @@ Kcrash %>% filter(., CONTRIBUTING.FACTOR.VEHICLE.1 !='1' &
 Kcrash -> Kcrashtest
 Xcrash$ATE <- ifelse(Xcrash$ATE == 'ATE', 'N', Xcrash$ATE)
 
-Scrash %>%  
+Kcrash %>%  
   pivot_longer(., cols =  c(CONTRIBUTING.FACTOR.VEHICLE.1, 
                             CONTRIBUTING.FACTOR.VEHICLE.2,
                             CONTRIBUTING.FACTOR.VEHICLE.3, 
@@ -64,8 +64,41 @@ Scrash %>%
                names_to = 'AccFactor', values_to = 'AccFactorVal') %>% 
   filter(., AccFactorVal != '') %>% filter(., AccFactorVal != 'Unspecified') %>% 
   inner_join(., AccReason, by = c('AccFactorVal' = 'reason')) %>% 
-  filter(., category == 'Human') %>% group_by(., AccFactorVal) %>% 
-  summarise(., No_Acc = n()) %>% arrange(., desc(No_Acc)) %>% top_n(., 5) %>% 
+  # group_by(., AccFactorVal) %>% 
+  # summarise(., No_Accidents = n()) %>% arrange(., desc(No_Accidents)) %>% 
+  group_by(category) %>% 
+  summarise( total = sum(n())) -> asdf
+
+asdf %>% summarise(sum(No_Accidents))[[1]][1]
+gvisColumnChart(data = asdf, xvar = 'AccFactorVal', yvar = 'No_Accidents', 
+)->qwer
+plot(qwer)
+
+
+gvisPieChart(
+  data = asdf, labelvar = "category", numvar = "total"
+) -> qwer
+
+Kcrash %>% 
+  group_by(.,YEAR) %>% 
+  summarise(., Total = n()) -> totalcrash
+Kcrash %>% 
+  group_by(.,YEAR) %>% 
+  summarise(., Total = n()) -> totalcrash
+Kcrash  %>% filter(., NUMBER.OF.PEDESTRIANS.INJURED >0 |
+                        NUMBER.OF.PEDESTRIANS.INJURED > 0) %>% 
+  group_by(., YEAR) %>% 
+  summarise(., Pedestrians = n()) -> pedcrash
+Kcrash  %>% filter(., NUMBER.OF.CYCLIST.INJURED >0 |
+                        NUMBER.OF.CYCLIST.INJURED > 0) %>% 
+  group_by(., YEAR) %>% 
+  summarise(., Cyclist = n()) -> cyccrash
+linedata <- inner_join(totalcrash, pedcrash, by = 'YEAR') %>%
+  inner_join(., cyccrash, by = 'YEAR')
+
+
+
+?gvisColumnChart
   ggplot(aes(x = AccFactorVal))+ geom_bar(stat = 'identity',aes(y = No_Acc))
 
 ?geom_bar
@@ -161,11 +194,11 @@ Kcrash %>% filter(., CONTRIBUTING.FACTOR.VEHICLE.1 != 'Unspecified' &
                   CONTRIBUTING.FACTOR.VEHICLE.3 != 'Unspecified' ) %>% 
   group_by(., YEAR) %>% summarise(.,n())
 
-Kcrash %>% filter(., CONTRIBUTING.FACTOR.VEHICLE.1 == 'Unspecified') %>% 
-  group_by(., YEAR) %>% summarise(.,n())
-Kcrash %>% filter(., YEAR == '2019') %>% summarise(.,n())
-
-
+str(Kcrash %>% filter(., CONTRIBUTING.FACTOR.VEHICLE.1 == 'Unspecified') %>% 
+  group_by(., YEAR) %>% summarise(.,n()))
+Kcrash %>% filter(., YEAR == '2019') %>% summarise(.,n()) -> asdf
+class(asdf)
+asdf[1,1]
 
 
 
@@ -341,3 +374,7 @@ readOGR(boroboundary)
 class(boroboundary)
 summary(boroboundary)
 ?spTransform
+
+
+head(Kcrash)
+head(boroboundary)
