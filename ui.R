@@ -1,38 +1,49 @@
 borochoice = c('Bronx','Brooklyn','Manhattan','Queens',"Staten Island")
+yearchoice = sort(unique(Scrash$YEAR))
 
-shinyUI(fluidPage(theme = shinytheme('journal'),
+shinyUI(fluidPage(#theme = shinytheme('journal'),
 navbarPage("NYC Vision Zero",
     tabPanel("Introduction",
         tabsetPanel(type = "pills",
-            tabPanel("History",
-                     #use h4 or smaller
-                     ), 
-            tabPanel("Summary",
-                     
+            tabPanel("History"
+                     #use h5 or smaller
                      ),
-            tabPanel("About the Author",
-                     
+            tabPanel("Summary",
+                     selectizeInput(inputId = "boroS",label = h5("Select Borough"),
+                                    choices = borochoice,
+                                    selected = "Brooklyn"),
+                     fluidRow(align = 'center',
+                        h4(textOutput('AllCollisions'))
+                     ),
+                     htmlOutput('TimeLineA'),
+                     htmlOutput('TimePercentA'), 
+                     fluidRow(align = 'center',
+                              h4(textOutput('IFCollisions'))
+                     ),
+                     htmlOutput('TimeLineIF'),
+                     htmlOutput('TimePercentIF')
+                     ),
+            tabPanel("About the Author"
+
                      )
         )
     ),
     tabPanel("Graphs",
         sidebarLayout(
             sidebarPanel(
-                selectizeInput(inputId = "boroG",label = "Select Borough",
+                selectizeInput(inputId = "boroG",label = h5("Select Borough"),
                                choices = borochoice,
                                selected = "Brooklyn"),
-                selectizeInput(inputId = 'yearG',label = "Select Year",
-                               choices = sort(unique(Scrash$YEAR)),
+                selectizeInput(inputId = 'yearG',label = h5("Select Year"),
+                               choices = yearchoice,
                                selected = '2019'),
-                checkboxGroupInput("injtypeG", label = h4("Injuries and Deaths"), 
+                checkboxGroupInput("injtypeG", label = h5("Injuries and Deaths"), 
                                    choices = list("Pedestrian" = 'pedinj', 
                                                   "Cyclist" = 'cycinj'),
                                    selected = c())
             ),
             mainPanel(
-                htmlOutput('TimeLine'),
-                htmlOutput('TimePercent'),
-                h3(textOutput("TotalIncidents")),
+                h4(textOutput("TotalIncidents")),
                 htmlOutput('AccidentTypes'),
                 htmlOutput('MainGraph')
             )
@@ -41,20 +52,20 @@ navbarPage("NYC Vision Zero",
     tabPanel("Maps",
         sidebarLayout(
             sidebarPanel(
-                selectizeInput(inputId = "boroM",label = "Select Borough",
+                selectizeInput(inputId = "boroM",label = h5("Select Borough"),
                                choices = borochoice,
                                selected = "Brooklyn"),
-                selectizeInput(inputId = 'yearM',label = "Select Year",
-                               choices = sort(unique(Scrash$YEAR)),
+                selectizeInput(inputId = 'yearM',label = h5("Select Year"),
+                               choices = yearchoice,
                                selected = '2019'),
-                checkboxGroupInput("accreasonM", label = h4("Accident Causes"), 
+                checkboxGroupInput("accreasonM", label = h5("Accident Causes"), 
                                    choices = list("Human" = 'Human', 
                                                   "Vehicular" = 'Vehicular', 
                                                   "Environmental" = 'Environmental'),
                                    selected = c('Human','Vehicular','Environmental')),
                 checkboxInput("bikelaneM", label = "Show Bikelanes", value = F),
                 checkboxInput("bikePZM", label = "Show Bike Priority Zones", value = F),
-                checkboxGroupInput("injtypeM", label = h4("Injuries and Deaths"), 
+                checkboxGroupInput("injtypeM", label = h5("Injuries and Deaths"), 
                                    choices = list("Pedestrian" = 'pedinj', 
                                                   "Cyclist" = 'cycinj'),
                                    selected = c())

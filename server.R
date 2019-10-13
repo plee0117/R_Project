@@ -1,6 +1,7 @@
 
 shinyServer(function(input, output) {
 
+    # Map Reactive ####
     markthese <- reactive({
         
         # pick the dataframe to use by borough and year
@@ -62,7 +63,7 @@ shinyServer(function(input, output) {
         temporary3
     })
     
-    
+    # Graph Reactive ####
     graphthese <- reactive({
         
         # pick the dataframe to use by borough and year
@@ -109,24 +110,39 @@ shinyServer(function(input, output) {
             filter(., AccFactorVal != '') %>% 
             filter(., AccFactorVal != 'Unspecified') %>% 
             inner_join(., AccReason, by = c('AccFactorVal' = 'reason')) ->
-            #filter(., category == 'Human') %>% 
-            # group_by(., AccFactorVal) %>% 
-            # summarise(., No_Accidents = n()) %>% 
-            # arrange(., desc(No_Accidents)) ->
             temporary6
         temporary6
     })
+
+    # Summary reactive ####
+    # pick the dataframe to use by borough
+    # select all incidents    
+    SummaryTab <- reactive({
+        switch (input$boroS, 
+                'Bronx' = Xcrash,
+                'Brooklyn' = Kcrash,
+                'Manhattan' = Mcrash,
+                'Queens' = Qcrash,
+                'Staten Island' = Scrash) -> borocrash
+        borocrash %>% 
+            group_by(.,YEAR) %>% 
+            summarise(., Total = n()) -> totalcrash
+        borocrash  %>% filter(., NUMBER.OF.PEDESTRIANS.INJURED >0 |
+                                  NUMBER.OF.PEDESTRIANS.INJURED > 0) %>% 
+            group_by(., YEAR) %>% 
+            summarise(., Pedestrians = n()) -> pedcrash
+        borocrash  %>% filter(., NUMBER.OF.CYCLIST.INJURED >0 |
+                                  NUMBER.OF.CYCLIST.INJURED > 0) %>% 
+            group_by(., YEAR) %>% 
+            summarise(., Cyclists = n()) -> cyccrash
+        inner_join(totalcrash, pedcrash, by = 'YEAR') %>%
+            inner_join(., cyccrash, by = 'YEAR') %>% 
+            mutate(.,Year = as.character(YEAR))
+    })    
     
-    output$MainMap <- renderLeaflet({
-        leaflet() %>% addTiles() %>% addProviderTiles('OpenMapSurfer.Roads') %>%
-             addCircles(data = markthese(),
-                        weight = 1, radius = markthese()$NUMBER.OF.CYCLIST.INJURED*200 +
-                            markthese()$NUMBER.OF.PEDESTRIANS.INJURED*250 +
-                            markthese()$NUMBER.OF.CYCLIST.KILLED*1000 +
-                            markthese()$NUMBER.OF.PEDESTRIANS.KILLED*1250,
-                        color = "Red"
-                        ) 
-    })
+
+    
+    # Graph Tab outputs ####
     output$MainGraph <- renderGvis({
         graphthese()%>% group_by(., AccFactorVal) %>% 
             summarise(., No_Accidents = n()) %>% 
@@ -138,7 +154,7 @@ shinyServer(function(input, output) {
     })
     output$TotalIncidents <- renderText({
         graphthese() %>% summarise(., sum(n())) -> showthis
-        c("Total nunmber of incidents",
+        c("Total number of incidents",
            as.data.frame(showthis)[1,1]
            )
     })
@@ -147,68 +163,63 @@ shinyServer(function(input, output) {
             summarise( total = sum(n())) -> piedata
         gvisPieChart(
             data = piedata, labelvar = "category", numvar = "total",
-            options = list(legend = 'none', title = 'All Accidents')
+            options = list(legend = 'none')
         )
     })
-    output$TimeLine <-renderGvis({
-        switch (input$boroG, 
-                'Bronx' = Xcrash,
-                'Brooklyn' = Kcrash,
-                'Manhattan' = Mcrash,
-                'Queens' = Qcrash,
-                'Staten Island' = Scrash) -> borocrash
-        borocrash %>% 
-            group_by(.,YEAR) %>% 
-            summarise(., Total = n()) -> totalcrash
-        borocrash  %>% filter(., NUMBER.OF.PEDESTRIANS.INJURED >0 |
-                                  NUMBER.OF.PEDESTRIANS.INJURED > 0) %>% 
-            group_by(., YEAR) %>% 
-            summarise(., Pedestrians = n()) -> pedcrash
-        borocrash  %>% filter(., NUMBER.OF.CYCLIST.INJURED >0 |
-                                  NUMBER.OF.CYCLIST.INJURED > 0) %>% 
-            group_by(., YEAR) %>% 
-            summarise(., Cyclists = n()) -> cyccrash
-        inner_join(totalcrash, pedcrash, by = 'YEAR') %>%
-            inner_join(., cyccrash, by = 'YEAR') %>% 
-            mutate(.,Year = as.character(YEAR))-> linedata
-        
+    
+    # SummaryTab outputs ####
+    # All collisions ####
+    output$AllCollisions <- renderText({
+        "All Collisions"
+    })
+    output$TimeLineA <-renderGvis({
         gvisLineChart(
-            data = linedata, xvar = "Year", 
-            yvar = c("Total", "Pedestrians","Cyclists"),
-            options = list(legend = 'none', focusTarget = 'category')
+            data = SummaryTab(), xvar = "Year", 
+            yvar = c("Total", "Pedestrians", "Cyclists"),
+            options = list(legend = 'bottom', focusTarget = 'category')
         )
     })
-    output$TimePercent <-renderGvis({
-        switch (input$boroG, 
-                'Bronx' = Xcrash,
-                'Brooklyn' = Kcrash,
-                'Manhattan' = Mcrash,
-                'Queens' = Qcrash,
-                'Staten Island' = Scrash) -> borocrash
-        borocrash %>% 
-            group_by(.,YEAR) %>% 
-            summarise(., Total = n()) -> totalcrash
-        borocrash  %>% filter(., NUMBER.OF.PEDESTRIANS.INJURED >0 |
-                                  NUMBER.OF.PEDESTRIANS.INJURED > 0) %>% 
-            group_by(., YEAR) %>% 
-            summarise(., Pedestrians = n()) -> pedcrash
-        borocrash  %>% filter(., NUMBER.OF.CYCLIST.INJURED >0 |
-                                  NUMBER.OF.CYCLIST.INJURED > 0) %>% 
-            group_by(., YEAR) %>% 
-            summarise(., Cyclists = n()) -> cyccrash
-        inner_join(totalcrash, pedcrash, by = 'YEAR') %>%
-            inner_join(., cyccrash, by = 'YEAR') %>% 
-            mutate(.,Year = as.character(YEAR))-> linedata
-        
+    output$TimePercentA <-renderGvis({
         gvisColumnChart(
-            data = linedata, xvar = "Year", 
-            yvar = c("Total", "Pedestrians","Cyclists"),
+            data = SummaryTab(), xvar = "Year", 
+            yvar = c("Total", "Pedestrians", "Cyclists"),
+            options = list(legend = 'none', isStacked = 'percent', 
+                           focusTarget = 'category')
+        )
+    })
+    # Collisions involing injuries and fatalities ####
+    output$IFCollisions <- renderText({
+        "Collisions Resulting in Injuries and Fatalities"
+    })
+    output$TimeLineIF <-renderGvis({
+        SummaryTab() %>% 
+        gvisLineChart(
+            data = SummaryTab(), xvar = "Year", 
+            yvar = c("Total", "Pedestrians", "Cyclists"),
+            options = list(legend = 'bottom', focusTarget = 'category')
+        )
+    })
+    output$TimePercentIF <-renderGvis({
+        gvisColumnChart(
+            data = SummaryTab(), xvar = "Year", 
+            yvar = c("Total", "Pedestrians", "Cyclists"),
             options = list(legend = 'none', isStacked = 'percent', 
                            focusTarget = 'category')
         )
     })
     
-    # bike priority zone
+    # Map Tab outputs ####
+    output$MainMap <- renderLeaflet({
+        leaflet() %>% addTiles() %>% addProviderTiles('OpenMapSurfer.Roads') %>%
+            addCircles(data = markthese(),
+                       weight = 1, radius = markthese()$NUMBER.OF.CYCLIST.INJURED*200 +
+                           markthese()$NUMBER.OF.PEDESTRIANS.INJURED*250 +
+                           markthese()$NUMBER.OF.CYCLIST.KILLED*1000 +
+                           markthese()$NUMBER.OF.PEDESTRIANS.KILLED*1250,
+                       color = "Red"
+            ) 
+    })
+    # bike priority zone ####
     observeEvent({input$bikePZM
                    input$injtypeM}, {
         proxy <- leafletProxy('MainMap')

@@ -98,6 +98,7 @@ linedata <- inner_join(totalcrash, pedcrash, by = 'YEAR') %>%
 
 
 
+
 ?gvisColumnChart
   ggplot(aes(x = AccFactorVal))+ geom_bar(stat = 'identity',aes(y = No_Acc))
 
