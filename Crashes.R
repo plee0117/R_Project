@@ -20,7 +20,10 @@ library(data.table)
 bikepathgeo <- geojson_read('./R_Project/Bicycle_Routes.geojson',what = 'sp')
 boroboundary <- geojson_read('./R_Project/Borough_Boundaries.geojson', what = 'sp')
 bikepriority <- geojson_read('./R_Project/VZV_Bike_Priority_Areas.geojson', what = 'sp')
-crashnona <- read.csv('./R_Project/cleancrash2.csv', stringsAsFactors = F)
+senior <- geojson_read('./R_Project/VZV_Safe_Streets_for_Seniors.geojson',what = 'sp')
+neighborhood <- geojson_read('./R_Project/VZV_Neighborhood_Slow_Zones.geojson',what = 'sp')
+EnhancedCrossing <- read.csv('./R_Project/dot_VZV_Enhanced_Crossings_20191001.csv', stringsAsFactors = F)
+crashnona <- read.csv('./R_Project/cleancrash.csv', stringsAsFactors = F)
 AccReason <- read.csv('./R_Project/accreason.csv', stringsAsFactors = F)
 Kcrash <- read.csv('./R_Project/Kcrash.csv', stringsAsFactors = F)
 Mcrash <- read.csv('./R_Project/Mcrash.csv', stringsAsFactors = F)
@@ -34,9 +37,6 @@ Xcrash <- read.csv('./R_Project/Xcrash.csv', stringsAsFactors = F)
 timeline = data.frame(Year = 2012:2019, 
                       Events = c(NA,"Citi Bike","Vision Zero",rep(NA,times = 5)))
 
-senior <- geojson_read('./R_Project/VZV_Safe Streets for Seniors.geojson',what = 'sp')
-neighborhood <- geojson_read('./R_Project/VZV_Neighborhood Slow Zones.geojson',what = 'sp')
-EnhancedCrossing <- read.csv('./R_Project/dot_VZV_Enhanced_Crossings_20191001.csv', stringsAsFactors = F)
 
 
 senior %>% leaflet() %>% addTiles() %>% addPolygons()
@@ -73,6 +73,32 @@ bikepathgeoog[bikepathgeoog$boro == 'Bronx'] -> bikeBX
 bikeBX %>% leaflet() %>% addTiles() %>% addPolylines()
 
 bikepathgeoog %>% leaflet() %>% addTiles() %>% addPolylines()
+
+sort(Scrash$VEHICLE.TYPE.CODE.3 %>% unique())
+
+
+Kcrash %>% pivot_longer(., c(VEHICLE.TYPE.CODE.1,VEHICLE.TYPE.CODE.2,
+                             VEHICLE.TYPE.CODE.3,VEHICLE.TYPE.CODE.4,
+                             VEHICLE.TYPE.CODE.5), names_to = 'VehicleNo',
+                        values_to = 'VehicleType') %>% 
+  pivot_longer(., cols =  c(CONTRIBUTING.FACTOR.VEHICLE.1, 
+                            CONTRIBUTING.FACTOR.VEHICLE.2,
+                            CONTRIBUTING.FACTOR.VEHICLE.3, 
+                            CONTRIBUTING.FACTOR.VEHICLE.4, 
+                            CONTRIBUTING.FACTOR.VEHICLE.5), 
+               names_to = 'AccFactor', values_to = 'AccFactorVal') %>% 
+  filter(., str_sub(VehicleNo,-1,-1) == str_sub(AccFactor,-1,-1)) -> scrashlong
+scrashlong %>% filter(., VehicleType == 'bike' | 
+                        VehicleType == 'BICYCLE') %>% 
+  filter(.,VehicleType != '')-> scrashshort
+scrashshort %>% filter(.,AccFactorVal != 'Unspecified',  AccFactorVal != "") -> scrashmicro
+nrow(scrashmicro)
+as.data.frame(scrashmicro) %>% filter(., YEAR ==2018) %>% 
+  filter(., NUMBER.OF.CYCLIST.INJURED> 0 |NUMBER.OF.CYCLIST.KILLED>0)
+sort(unique(scrashshort$VehicleType))
+
+BICYCLE
+Bike
 
 
 

@@ -111,6 +111,12 @@ shinyServer(function(input, output) {
                                       CONTRIBUTING.FACTOR.VEHICLE.5), 
                                       names_to = 'AccFactor', 
                                       values_to = 'AccFactorVal') %>% 
+            pivot_longer(., c(VEHICLE.TYPE.CODE.1,VEHICLE.TYPE.CODE.2,
+                              VEHICLE.TYPE.CODE.3,VEHICLE.TYPE.CODE.4,
+                              VEHICLE.TYPE.CODE.5), names_to = 'VehicleNo',
+                         values_to = 'VehicleType') %>% 
+            filter(., str_sub(VehicleNo,-1,-1) == str_sub(AccFactor,-1,-1)) %>% 
+            filter(., VehicleType != '') %>% 
             filter(., AccFactorVal != '') %>% 
             filter(., AccFactorVal != 'Unspecified') %>% 
             inner_join(., AccReason, by = c('AccFactorVal' = 'reason')) ->
@@ -287,7 +293,8 @@ shinyServer(function(input, output) {
     })
 
     # Improvement and priority zone ####
-    observeEvent({input$PZtypeM
+    observeEvent({input$PZtypeM 
+                    input$yearM
                    input$injtypeM}, {
         proxy <- leafletProxy('MainMap')
         if ('BPZ' %in%input$PZtypeM) {
@@ -351,25 +358,39 @@ shinyServer(function(input, output) {
     })
     output$AccidentTypes <-renderGvis({
         graphthese() %>%group_by(category) %>% 
-            summarise( total = sum(n())) -> piedata
+            summarise( total = sum(n_distinct(COLLISION_ID))) -> piedata
         gvisPieChart(
             data = piedata, labelvar = "category", numvar = "total",
             options = list(legend = 'labeled', pieSliceText = 'none',
-                           tooltip = "{ignoreBounds:'true',isHtml:'true'}",
+                           tooltip = "{ignoreBounds:'true'}",
                            title = "Accident Factors")
         )
     })
 
-    output$LeadingCauses <- renderGvis({
-        graphthese()%>% group_by(., AccFactorVal) %>% 
-            summarise(., No_Accidents = n()) %>% 
-            arrange(., desc(No_Accidents)) %>% top_n(., 5) -> top5_acc
+    output$LeadingCausesD <- renderGvis({
+        graphthese()%>% 
+            filter(., VehicleType != 'bike' & VehicleType != 'BICYCLE') %>% 
+            group_by(., AccFactorVal) %>% 
+            summarise(., No_Accidents = n_distinct(COLLISION_ID)) %>% 
+            arrange(., desc(No_Accidents)) %>% top_n(., 5) -> top5_accd
         gvisColumnChart(
-            data = top5_acc, xvar = 'AccFactorVal', 
+            data = top5_accd, xvar = 'AccFactorVal', 
             yvar = 'No_Accidents', 
             options = list(legend= 'none', 
-                           title = "Leading Causes of Accidents")
+                           title = "Leading Causes of Accidents (Driver)")
         )
+    })
+    output$LeadingCausesC <- renderInfoBox({
+        if ('cycinj' %in% input$injtypeG) {
+            graphthese()%>%
+                filter(., VehicleType == 'bike' | VehicleType == 'BICYCLE') %>%
+            group_by(., AccFactorVal) %>%
+                summarise(., No_Accidents = n_distinct(COLLISION_ID)) %>%
+                arrange(., desc(No_Accidents)) %>% top_n(., 1) -> top_accb
+            if (nrow(top_accb)>0) {
+                infoBox(top_accb$AccFactorVal[1], top_accb$No_Accidents[1], icon = icon("bicycle"))
+            } else infoBox("", "", icon = icon(""))
+        } else infoBox("", "", icon = icon(""))
     })
     
     

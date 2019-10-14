@@ -10,7 +10,8 @@ navbarPage("NYC Vision Zero",
                      reduinge the number of traffic related fatalities New York 
                      City. Its goal to eliminate all deaths and injuries from the 
                      streets by 2024, through improved legislation, enforcement 
-                     and street design."
+                     and street design. Use this app to navigate the different efforts
+                     and to explore the various neighborhoods affected."
                      ),
             tabPanel("Overview",
                      selectizeInput(inputId = "boroS",label = h5("Select Borough"),
@@ -102,7 +103,8 @@ navbarPage("NYC Vision Zero",
                 fluidRow(align = 'center',
                          h1(textOutput(""))
                 ),
-                htmlOutput('LeadingCauses')
+                htmlOutput('LeadingCausesD'),
+                infoBoxOutput('LeadingCausesC')
             )
         )
     )
