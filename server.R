@@ -277,20 +277,20 @@ shinyServer(function(input, output) {
     # Map Tab outputs ####
     output$MainMap <- renderLeaflet({
         leaflet() %>% addTiles() %>% addProviderTiles('OpenMapSurfer.Roads') %>%
-            addCircles(data = markthese(), stroke = FALSE,opacity = 0.4,
-                       weight = 1, radius = markthese()$NUMBER.OF.CYCLIST.INJURED*200 +
-                           markthese()$NUMBER.OF.PEDESTRIANS.INJURED*250 +
-                           markthese()$NUMBER.OF.CYCLIST.KILLED*1000 +
-                           markthese()$NUMBER.OF.PEDESTRIANS.KILLED*1250,
+            addCircles(data = markthese(), stroke = 0.01, fillOpacity = 0.3,
+                       weight = 0.1, radius = markthese()$NUMBER.OF.CYCLIST.INJURED*100 +
+                           markthese()$NUMBER.OF.PEDESTRIANS.INJURED*150 +
+                           markthese()$NUMBER.OF.CYCLIST.KILLED*500 +
+                           markthese()$NUMBER.OF.PEDESTRIANS.KILLED*750,
                        color = "Red"
             ) 
     })
 
-    # bike priority zone ####
-    observeEvent({input$bikePZM
+    # Improvement and priority zone ####
+    observeEvent({input$PZtypeM
                    input$injtypeM}, {
         proxy <- leafletProxy('MainMap')
-        if (input$bikePZM) {
+        if ('BPZ' %in%input$PZtypeM) {
             proxy %>%
                 addPolygons(data = bikepriority, layerId = LETTERS[1:10],
                              weight = 1, color = 'blue')
@@ -298,6 +298,35 @@ shinyServer(function(input, output) {
             proxy %>%
                 removeShape(layerId = LETTERS[1:10])
         }
+        if ('EC' %in%input$PZtypeM) {
+            EnhancedCrossing %>% 
+                filter(.,as.Date(Date_Imple,'%m/%d/%Y') < 
+                           as.Date(paste0(input$yearM,'/01/01'))) -> 
+                ECC
+            proxy %>%
+                addCircles(data = ECC, layerId = paste0("E",(1:184)),
+                            weight = 5, color = 'green', opacity = 10)
+        } else{
+            proxy %>%
+                removeShape(layerId = paste0("E",(1:184)))
+        }
+        if ('SSS' %in%input$PZtypeM) {
+            proxy %>%
+                addPolygons(data = senior, layerId = paste0("S",(1:41)),
+                            weight = 1, color = 'blue', opacity = 0.5)
+        } else{
+            proxy %>%
+                removeShape(layerId = paste0("S",(1:41)))
+        }
+        if ('NSZ' %in%input$PZtypeM) {
+            proxy %>%
+                addPolygons(data = neighborhood, layerId = paste0("N",(1:28)),
+                            weight = 1, color = 'blue')
+        } else{
+            proxy %>%
+                removeShape(layerId = paste0("N",(1:28)))
+        }
+
     })
     # bike lanes ####
     observeEvent(input$bikelane, {

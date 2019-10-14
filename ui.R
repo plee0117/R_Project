@@ -47,23 +47,28 @@ navbarPage("NYC Vision Zero",
     tabPanel("Maps",
              sidebarLayout(
                  sidebarPanel(
-                     selectizeInput(inputId = "boroM",label = h5("Select Borough"),
+                     selectizeInput(inputId = "boroM",label = "Select Borough",
                                     choices = borochoice,
                                     selected = "Brooklyn"),
-                     selectizeInput(inputId = 'yearM',label = h5("Select Year"),
+                     selectizeInput(inputId = 'yearM',label = "Select Year",
                                     choices = yearchoice,
                                     selected = '2019'),
-                     checkboxGroupInput("accreasonM", label = h5("Accident Causes"), 
+                     checkboxGroupInput("accreasonM", label = "Accident Causes", 
                                         choices = list("Human" = 'Human', 
                                                        "Vehicular" = 'Vehicular', 
                                                        "Environmental" = 'Environmental'),
                                         selected = c('Human','Vehicular','Environmental')),
-                     checkboxInput("bikelaneM", label = "Show Bikelanes", value = F),
-                     checkboxInput("bikePZM", label = "Show Bike Priority Zones", value = F),
-                     checkboxGroupInput("injtypeM", label = h5("Injuries and Deaths"), 
+                     checkboxGroupInput("PZtypeM", label = "Priority Zones and Improvements", 
+                                        choices = list("Enhanced Crossings" = 'EC',
+                                                       "Bike Priority Zones" = 'BPZ', 
+                                                       "Neighborhood Slow Zones"='NSZ',
+                                                       "Safe Streets for Seniors" = 'SSS'),
+                                        selected = c()),
+                     checkboxGroupInput("injtypeM", label = "Injuries and Deaths", 
                                         choices = list("Pedestrian" = 'pedinj', 
                                                        "Cyclist" = 'cycinj'),
-                                        selected = c())
+                                        selected = c('pedinj')),
+                     helpText('Note: If no injury type is selected, all accidents will be displayed.')
                  ),
                  mainPanel(
                      textOutput("acccount"),
@@ -85,7 +90,8 @@ navbarPage("NYC Vision Zero",
                 checkboxGroupInput("injtypeG", label = h5("Injuries and Deaths"), 
                                    choices = list("Pedestrian" = 'pedinj', 
                                                   "Cyclist" = 'cycinj'),
-                                   selected = c())
+                                   selected = c('pedinj')),
+                helpText('Note: If no injury type is selected, all accidents will be displayed.')
             ),
             mainPanel(
                 

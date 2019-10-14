@@ -34,11 +34,48 @@ Xcrash <- read.csv('./R_Project/Xcrash.csv', stringsAsFactors = F)
 timeline = data.frame(Year = 2012:2019, 
                       Events = c(NA,"Citi Bike","Vision Zero",rep(NA,times = 5)))
 
-round(153.45,-1)
+senior <- geojson_read('./R_Project/VZV_Safe Streets for Seniors.geojson',what = 'sp')
+neighborhood <- geojson_read('./R_Project/VZV_Neighborhood Slow Zones.geojson',what = 'sp')
+EnhancedCrossing <- read.csv('./R_Project/dot_VZV_Enhanced_Crossings_20191001.csv', stringsAsFactors = F)
+
+
+senior %>% leaflet() %>% addTiles() %>% addPolygons()
+neighborhood %>% leaflet() %>% addTiles() %>% addPolygons()
+EnhancedCrossing %>% leaflet() %>% addTiles() %>% addCircles()
+colnames(EnhancedCrossing)
+senior@plotOrder
+neighborhood@plotOrder
+nrow(EnhancedCrossing)
+asdf = '2017'
+EnhancedCrossing %>% filter(.,as.Date(Date_Imple,'%m/%d/%Y') < as.Date(paste0(asdf,'/01/01/')))
+str(EnhancedCrossing)
+as.Date(EnhancedCrossing$Date_Imple,format = '%m/%d/%Y')
+
+letters[1:28]
+
+paste0('A',(1:28))
+
 
 bikelanes <- st_read('./R_Project/extras/20190110__NYCDOT_BICYCLE_NETWORK/NYCDOT_BICYCLE_NETWORK_current_.shp')
 bikelanes %>% 
-leaflet() %>% addTiles() %>% addPolygons()
+leaflet() %>% addTiles() %>% addPolylines()
+names(bikelanes)
+
+bikepathgeoog <- readOGR(dsn = path.expand('./R_Project/Bicycle_Routes.geojson'), "OGRGeoJSON")
+
+
+
+slotNames(bikepathgeoog)
+names(bikepathgeoog)
+
+bikepathgeoog[bikepathgeoog$boro == 'Bronx'] -> bikeBX
+
+bikeBX %>% leaflet() %>% addTiles() %>% addPolylines()
+
+bikepathgeoog %>% leaflet() %>% addTiles() %>% addPolylines()
+
+
+
 
 slotNames(bikelanes)
 class(bikelanes)
