@@ -31,10 +31,20 @@ Xcrash <- read.csv('./R_Project/Xcrash.csv', stringsAsFactors = F)
 
 
 # above into global
+timeline = data.frame(Year = 2012:2019, 
+                      Events = c(NA,"Citi Bike","Vision Zero",rep(NA,times = 5)))
+
+bikelanes <- st_read('./R_Project/extras/20190110__NYCDOT_BICYCLE_NETWORK/NYCDOT_BICYCLE_NETWORK_current_.shp')
+bikelanes %>% 
+leaflet() %>% addTiles() %>% addPolygons()
+
+slotNames(bikelanes)
+class(bikelanes)
 
 Xcrash <- Xcrash %>% select(., -ATH, -ATV, -ATE)
-write.csv(Xcrash, file = './R_Project/Xcrash.csv', row.names = F)
+write.csv(AccReason, file = './R_Project/accreason.csv', row.names = F)
 
+AccReason$category <- ifelse(AccReason$category == 'Vehicle', 'Vehicular',AccReason$category)
 
 
 pickboro<- function(boroname){
@@ -257,7 +267,7 @@ acc_reason$category <- ifelse(acc_reason$category == 1, 'Human',
                               ifelse(acc_reason$category == 2, 'Vehicle',
                                      ifelse(acc_reason$category == 3, 'Environmental','Other')))
 acc_reason
-write.csv(acc_reason, file = './R_Project/accreason.csv')
+
 
 acc_reason %>% filter(., category == 3) %>% arrange(., category)
 crashnona %>% filter(., CONTRIBUTING.FACTOR.VEHICLE.1 =='Illnesss') %>% 
@@ -276,6 +286,23 @@ leaflet() %>% addTiles() %>% addPolygons(data = boroboundary, weight = 1, color 
   addPolylines(data = bikepriority, weight = 1, color = 'blue') %>% 
   addPolylines(data = bikepathgeo, weight = 1, color = 'green')
 
+plot(gvisGeoChart(data = boroboundary))
+
+asdf = c(letters[1:4])
+qwer =         c(1,3,2,4)
+zxc = rbind(asdf,qwer)
+zxc %>% filter(a == 1) %>% pivot_longer(.,c('b','c','d'),names_to = "newcolumn",values_to = "values")-> asdf
+asdf
+asdf[values == max(values),newcolumn]
+
+?pivot_longer
+
+
+
+colnames(zxc)=asdf
+as.data.frame(zxc)->zxc
+
+zxc
 crashes <- read.csv('./R_Project/NYPD_Motor_Vehicle_Collisions_-_Crashes.csv', 
                     stringsAsFactors = F)
 # get rid of weird/unknown locations and dates

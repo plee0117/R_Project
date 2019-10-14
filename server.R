@@ -1,4 +1,8 @@
 
+biketimeline = data.frame(Year = 2012:2019, 
+                      Events = c(NA,"Citi Bike","Vision Zero",rep(NA,times = 5)))
+timeline = data.frame(Year = 2012:2019, 
+                          Events = c(NA,NA,"Vision Zero",rep(NA,times = 5)))
 shinyServer(function(input, output) {
 
     # Map Reactive ####
@@ -114,32 +118,7 @@ shinyServer(function(input, output) {
         temporary6
     })
 
-    # Summary1 reactive ####
-    # pick the dataframe to use by borough
-    # select all incidents    
-    AllCollision <- reactive({
-        switch (input$boroS, 
-                'Bronx' = Xcrash,
-                'Brooklyn' = Kcrash,
-                'Manhattan' = Mcrash,
-                'Queens' = Qcrash,
-                'Staten Island' = Scrash) -> borocrash
-        borocrash %>% 
-            group_by(.,YEAR) %>% 
-            summarise(., Total = n()) -> totalcrash
-        borocrash  %>% filter(., NUMBER.OF.PEDESTRIANS.INJURED >0 |
-                                  NUMBER.OF.PEDESTRIANS.KILLED > 0) %>% 
-            group_by(., YEAR) %>% 
-            summarise(., Pedestrians = n()) -> pedcrash
-        borocrash  %>% filter(., NUMBER.OF.CYCLIST.INJURED >0 |
-                                  NUMBER.OF.CYCLIST.KILLED > 0) %>% 
-            group_by(., YEAR) %>% 
-            summarise(., Cyclists = n()) -> cyccrash
-        inner_join(totalcrash, pedcrash, by = 'YEAR') %>%
-            inner_join(., cyccrash, by = 'YEAR') %>% 
-            mutate(.,Year = as.character(YEAR))
-    })
-    # Summary2 reactive ####
+    # Overview1 reactive ####
     # pick the dataframe to use by borough
     # select only incidents resulting in ped and cyc injuries and deaths  
     IFCollision <- reactive({
@@ -166,85 +145,138 @@ shinyServer(function(input, output) {
         inner_join(pedcrash, peddeath, by = 'YEAR') %>%
             inner_join(., cyccrash, by = 'YEAR') %>% 
             inner_join(., cycdeath, by = 'YEAR') %>%
-            mutate(.,Year = as.character(YEAR))
+            rename(., Year = YEAR)
     })
     
+    # Overview2 reactive ####
+    # pick the dataframe to use by borough
+    # select all incidents    
+    AllCollision <- reactive({
+        switch (input$boroS, 
+                'Bronx' = Xcrash,
+                'Brooklyn' = Kcrash,
+                'Manhattan' = Mcrash,
+                'Queens' = Qcrash,
+                'Staten Island' = Scrash) -> borocrash
+        borocrash %>% 
+            group_by(.,YEAR) %>% 
+            summarise(., Total = n()) -> totalcrash
+        borocrash  %>% filter(., NUMBER.OF.PEDESTRIANS.INJURED >0 |
+                                  NUMBER.OF.PEDESTRIANS.KILLED > 0) %>% 
+            group_by(., YEAR) %>% 
+            summarise(., Pedestrians = n()) -> pedcrash
+        borocrash  %>% filter(., NUMBER.OF.CYCLIST.INJURED >0 |
+                                  NUMBER.OF.CYCLIST.KILLED > 0) %>% 
+            group_by(., YEAR) %>% 
+            summarise(., Cyclists = n()) -> cyccrash
+        inner_join(totalcrash, pedcrash, by = 'YEAR') %>%
+            inner_join(., cyccrash, by = 'YEAR') %>% 
+            rename(., Year = YEAR)
+    })
 
+    # Overview Tab outputs ####
+    # Collisions involing injuries and fatalities ####
+    output$IFCollisions <- renderText({
+        "Collisions Resulting in Injuries and Fatalities"
+    })
+    output$TimeLinePIF <-renderGvis({
+        IFCollision() %>% inner_join(.,timeline, by = "Year") %>% 
+            rename(., Pedestrians.annotation = Events) %>% 
+            mutate(.,Year = as.character(Year)) %>% 
+            select(., c("Year", "Pedestrians", "Pedestrians.annotation", "Pedestrian_Fatalities"))->
+            IFC
+        gvisLineChart(
+            data = IFC, xvar = "Year", 
+            yvar = c("Pedestrians", "Pedestrians.annotation", "Pedestrian_Fatalities"),
+            options = list(legend = 'bottom', focusTarget = 'category',
+                           title = "Pedestrian Injuries and Fatalities",
+                           annotations = "{style:'line'}",
+                           series = "[{targetAxisIndex:0, color:'red'},
+                           {targetAxisIndex:1, color:'blue'}]",
+                           vAxes ="[{title:'Injuries'}, {title:'Fatalities'}]")
+        )
+    })
+    output$TimePercentPIF <-renderGvis({
+        IFCollision() %>% 
+            mutate(.,Year = as.character(Year), Fatality_Rate = Pedestrian_Fatalities/Pedestrians,
+                   Fatality_Rate.html.tooltip = paste0(Pedestrian_Fatalities*100/Pedestrians,'%')) ->IFC
+        gvisColumnChart(
+            data = IFC, xvar = "Year", 
+            yvar = "Fatality_Rate",
+            options = list(legend = 'none',
+                           title = "Pedestrian Accident Fatalities Rate",
+                           focusTarget = 'category',
+                           vAxis = "{format:'#,###.#%'}",
+                           tooltip = "{format:'#,###%'}")#??? How do I show the second column?
+#???????????????????????????????????????????????????????????????
+        )
+    })
+    output$TimeLineCIF <-renderGvis({
+        IFCollision() %>% inner_join(.,biketimeline, by = "Year") %>%
+            rename(., Cyclist.annotation = Events) %>% 
+            mutate(.,Year = as.character(Year))->
+            IFC
+        gvisLineChart(
+            data = IFC, xvar = "Year", 
+            yvar = c("Cyclists", "Cyclist.annotation", "Cyclist_Fatalities"),
+            options = list(legend = 'bottom', focusTarget = 'category',
+                           title = "Cyclist Injuries and Fatalities",
+                           annotations = "{style:'line'}",
+                           series = "[{targetAxisIndex:0, color:'red'},
+                           {targetAxisIndex:1, color:'blue'}]",
+                           vAxes ="[{title:'Injuries'}, {title:'Fatalities'}]")
+        )
+    })
+
+    output$TimePercentCIF <-renderGvis({
+        IFCollision() %>% 
+            mutate(.,Year = as.character(Year), Fatality_Rate = Cyclist_Fatalities/Cyclists,
+                   Fatality_Rate.html.tooltip = paste0(Fatality_Rate,'%')) ->IFC
+        gvisColumnChart(
+            data = IFC, xvar = "Year", 
+            yvar = "Fatality_Rate",
+            options = list(legend = 'none', 
+                           title = "Cyclist Injuries and Fatalities Rate",
+                           vAxis = "{format:'#,###.#%'}", 
+                           focusTarget = 'category')
+        )
+    })
     
-    # SummaryTab outputs ####
     # All collisions ####
     output$AllCollisions <- renderText({
         "All Collisions"
     })
     output$TimeLineA <-renderGvis({
+        AllCollision() %>% inner_join(.,biketimeline, by = "Year") %>%
+            rename(., Cyclist.annotation = Events) %>% 
+            mutate(.,Year = as.character(Year))->
+            IFC
         gvisLineChart(
-            data = AllCollision(), xvar = "Year", 
-            yvar = c("Total", "Pedestrians", "Cyclists"),
-            options = list(legend = 'bottom', focusTarget = 'category')
+            data = IFC, xvar = "Year", 
+            yvar = c("Total", "Pedestrians", "Cyclists", "Cyclist.annotation"),
+            options = list(legend = 'bottom', focusTarget = 'category',
+                           annotations = "{style:'line'}",
+                           title = "All Traffic Accidents")
         )
     })
     output$TimePercentA <-renderGvis({
-        gvisColumnChart(
-            data = AllCollision(), xvar = "Year", 
-            yvar = c("Total", "Pedestrians", "Cyclists"),
-            options = list(legend = 'none', isStacked = 'percent', 
-                           focusTarget = 'category')
-        )
-    })
-    # Collisions involing injuries and fatalities ####
-    output$IFCollisions <- renderText({
-        "Collisions Resulting in Injuries and Fatalities"
-    })
-    output$TimeLineIF <-renderGvis({
+        AllCollision() %>% 
+            mutate(.,Year = as.character(Year), 
+                   Pedestrian_Rate = Pedestrians/Total, 
+                   Cyclist_Rate = Cyclists/Total) ->IFC
         gvisLineChart(
-            data = IFCollision(), xvar = "Year", 
-            yvar = c("Pedestrians", "Pedestrian_Fatalities","Cyclists", "Cyclist_Fatalities"),
-            options = list(legend = 'bottom', focusTarget = 'category')
+            data = IFC, xvar = "Year", 
+            yvar = c("Pedestrian_Rate", "Cyclist_Rate"),
+            options = list(legend = 'bottom', 
+                           focusTarget = 'category',
+                           vAxis = "{format:'#,###.#%'}",
+                           title = "Accident Rates Involving Pedestrians and Cyclists")
         )
     })
-    output$TimePercentIF <-renderGvis({
-        gvisColumnChart(
-            data = IFCollision(), xvar = "Year", 
-            yvar = c("Pedestrians", "Pedestrian_Fatalities","Cyclists", "Cyclist_Fatalities"),
-            options = list(legend = 'none', isStacked = 'percent', 
-                           focusTarget = 'category')
-        )
-    })
-    
-    # Graph Tab outputs ####
-    output$TotalIncidents <- renderText({
-        graphthese() %>% summarise(., sum(n())) -> showthis
-        c("Number of incidents:",
-          as.data.frame(showthis)[1,1]
-        )
-    })
-    output$AccidentTypes <-renderGvis({
-        graphthese() %>%group_by(category) %>% 
-            summarise( total = sum(n())) -> piedata
-        gvisPieChart(
-            data = piedata, labelvar = "category", numvar = "total",
-            options = list(legend = 'none')
-        )
-    })
-    output$LCTitle <- renderText({
-        c("Leading Cause of Accidents")
-    })
-    output$LeadingCauses <- renderGvis({
-        graphthese()%>% group_by(., AccFactorVal) %>% 
-            summarise(., No_Accidents = n()) %>% 
-            arrange(., desc(No_Accidents)) %>% top_n(., 5) -> top5_acc
-        gvisColumnChart(
-            data = top5_acc, xvar = 'AccFactorVal', 
-            yvar = 'No_Accidents', 
-            options = list(legend= 'none')
-        )
-    })
-
-    
     # Map Tab outputs ####
     output$MainMap <- renderLeaflet({
         leaflet() %>% addTiles() %>% addProviderTiles('OpenMapSurfer.Roads') %>%
-            addCircles(data = markthese(),
+            addCircles(data = markthese(), stroke = FALSE,opacity = 0.4,
                        weight = 1, radius = markthese()$NUMBER.OF.CYCLIST.INJURED*200 +
                            markthese()$NUMBER.OF.PEDESTRIANS.INJURED*250 +
                            markthese()$NUMBER.OF.CYCLIST.KILLED*1000 +
@@ -252,6 +284,7 @@ shinyServer(function(input, output) {
                        color = "Red"
             ) 
     })
+
     # bike priority zone ####
     observeEvent({input$bikePZM
                    input$injtypeM}, {
@@ -265,7 +298,51 @@ shinyServer(function(input, output) {
                 removeShape(layerId = LETTERS[1:10])
         }
     })
+    # bike lanes ####
+    observeEvent(input$bikelane, {
+        proxy <- leafletProxy('MainMap')
+        if (input$bikelane) {
+            proxy %>%
+                addPolylines(data = bikepathgeo, layerId = 'bikelanelayer',
+                             weight = 1, color = 'blue')
+        } else{
+            proxy %>%
+                removeShape(layerId = 'bikelanelayer')
+        }
+    })
+    
+    
+    # Causes Tab outputs ####
+    output$TotalIncidents <- renderText({
+        graphthese() %>% summarise(., sum(n())) -> showthis
+        c("Number of incidents:",
+          as.data.frame(showthis)[1,1]
+        )
+    })
+    output$AccidentTypes <-renderGvis({
+        graphthese() %>%group_by(category) %>% 
+            summarise( total = sum(n())) -> piedata
+        gvisPieChart(
+            data = piedata, labelvar = "category", numvar = "total",
+            options = list(legend = 'labeled', pieSliceText = 'none',
+                           tooltip = "{ignoreBounds:'true',isHtml:'true'}",
+                           title = "Accident Factors")
+        )
+    })
 
+    output$LeadingCauses <- renderGvis({
+        graphthese()%>% group_by(., AccFactorVal) %>% 
+            summarise(., No_Accidents = n()) %>% 
+            arrange(., desc(No_Accidents)) %>% top_n(., 5) -> top5_acc
+        gvisColumnChart(
+            data = top5_acc, xvar = 'AccFactorVal', 
+            yvar = 'No_Accidents', 
+            options = list(legend= 'none', 
+                           title = "Leading Causes of Accidents")
+        )
+    })
+    
+    
     #testing elements from here
     boroname <- reactive({
         switch (input$boroM,
@@ -281,18 +358,7 @@ shinyServer(function(input, output) {
         )
     })
     #testing elements up to here    
-
-    # observeEvent(input$bikelane, {
-    #     proxy <- leafletProxy('MainMap')
-    #     if (input$bikelane) {
-    #         proxy %>%
-    #             addPolylines(data = bikepathgeo, layerId = 'bikelanelayer',
-    #                          weight = 1, color = 'blue')
-    #     } else{
-    #         proxy %>%
-    #             removeShape(layerId = 'bikelanelayer')
-    #     }
-    # })
+    
 
 })
 #?addPolylines
