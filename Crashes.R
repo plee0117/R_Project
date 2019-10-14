@@ -34,6 +34,8 @@ Xcrash <- read.csv('./R_Project/Xcrash.csv', stringsAsFactors = F)
 timeline = data.frame(Year = 2012:2019, 
                       Events = c(NA,"Citi Bike","Vision Zero",rep(NA,times = 5)))
 
+round(153.45,-1)
+
 bikelanes <- st_read('./R_Project/extras/20190110__NYCDOT_BICYCLE_NETWORK/NYCDOT_BICYCLE_NETWORK_current_.shp')
 bikelanes %>% 
 leaflet() %>% addTiles() %>% addPolygons()

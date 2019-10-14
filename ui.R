@@ -6,8 +6,11 @@ navbarPage("NYC Vision Zero",
     tabPanel("Introduction",
         tabsetPanel(type = "pills",
             tabPanel("History", #use h5 or smaller
-                     "Vision Zero is program implemented in 2014 aimed to reduce the 
-                     number of traffic related fatalities New York City. "
+                     "Vision Zero is a program implemented in 2014 aimed at 
+                     reduinge the number of traffic related fatalities New York 
+                     City. Its goal to eliminate all deaths and injuries from the 
+                     streets by 2024, through improved legislation, enforcement 
+                     and street design."
                      ),
             tabPanel("Overview",
                      selectizeInput(inputId = "boroS",label = h5("Select Borough"),

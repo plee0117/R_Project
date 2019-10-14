@@ -199,16 +199,14 @@ shinyServer(function(input, output) {
     output$TimePercentPIF <-renderGvis({
         IFCollision() %>% 
             mutate(.,Year = as.character(Year), Fatality_Rate = Pedestrian_Fatalities/Pedestrians,
-                   Fatality_Rate.html.tooltip = paste0(Pedestrian_Fatalities*100/Pedestrians,'%')) ->IFC
+                   Fatality_Rate.tooltip = paste0(round(Fatality_Rate*100,2),'%')) ->IFC
         gvisColumnChart(
             data = IFC, xvar = "Year", 
-            yvar = "Fatality_Rate",
+            yvar = c("Fatality_Rate","Fatality_Rate.tooltip"),
             options = list(legend = 'none',
                            title = "Pedestrian Accident Fatalities Rate",
                            focusTarget = 'category',
-                           vAxis = "{format:'#,###.#%'}",
-                           tooltip = "{format:'#,###%'}")#??? How do I show the second column?
-#???????????????????????????????????????????????????????????????
+                           vAxis = "{format:'#,###.#%'}")
         )
     })
     output$TimeLineCIF <-renderGvis({
@@ -231,10 +229,10 @@ shinyServer(function(input, output) {
     output$TimePercentCIF <-renderGvis({
         IFCollision() %>% 
             mutate(.,Year = as.character(Year), Fatality_Rate = Cyclist_Fatalities/Cyclists,
-                   Fatality_Rate.html.tooltip = paste0(Fatality_Rate,'%')) ->IFC
+                   Fatality_Rate.tooltip = paste0(round(Fatality_Rate*100,2),'%')) ->IFC
         gvisColumnChart(
             data = IFC, xvar = "Year", 
-            yvar = "Fatality_Rate",
+            yvar = c("Fatality_Rate","Fatality_Rate.tooltip"),
             options = list(legend = 'none', 
                            title = "Cyclist Injuries and Fatalities Rate",
                            vAxis = "{format:'#,###.#%'}", 
@@ -263,10 +261,13 @@ shinyServer(function(input, output) {
         AllCollision() %>% 
             mutate(.,Year = as.character(Year), 
                    Pedestrian_Rate = Pedestrians/Total, 
-                   Cyclist_Rate = Cyclists/Total) ->IFC
+                   Pedestrian_Rate.tooltip = paste0(round(Pedestrian_Rate*100,2),'%'),
+                   Cyclist_Rate = Cyclists/Total,
+                   Cyclist_Rate.tooltip = paste0(round(Cyclist_Rate*100,2),'%')) ->IFC
         gvisLineChart(
             data = IFC, xvar = "Year", 
-            yvar = c("Pedestrian_Rate", "Cyclist_Rate"),
+            yvar = c("Pedestrian_Rate", "Pedestrian_Rate.tooltip", 
+                     "Cyclist_Rate", "Cyclist_Rate.tooltip"),
             options = list(legend = 'bottom', 
                            focusTarget = 'category',
                            vAxis = "{format:'#,###.#%'}",
