@@ -217,9 +217,9 @@ Scrash %>%
            NUMBER.OF.PEDESTRIANS.INJURED > 0 | NUMBER.OF.PEDESTRIANS.KILLED > 0) %>% 
   spread()
 
-
+Xcrash %>% filter(., YEAR == '2014') %>%  filter(NUMBER.OF.PEDESTRIANS.KILLED>1)
 ?pivot_wider
-
+unique(Scrash$YEAR)
 
 
 
@@ -368,6 +368,8 @@ colnames(zxc)=asdf
 as.data.frame(zxc)->zxc
 
 zxc
+
+
 crashes <- read.csv('./R_Project/NYPD_Motor_Vehicle_Collisions_-_Crashes.csv', 
                     stringsAsFactors = F)
 # get rid of weird/unknown locations and dates

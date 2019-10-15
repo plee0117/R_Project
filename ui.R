@@ -5,18 +5,21 @@ shinyUI(fluidPage(#theme = shinytheme('journal'),
 navbarPage("NYC Vision Zero",
     tabPanel("Introduction",
         tabsetPanel(type = "pills",
-            tabPanel("History", #use h5 or smaller
-                     "Vision Zero is a program implemented in 2014 aimed at 
-                     reduinge the number of traffic related fatalities New York 
-                     City. Its goal to eliminate all deaths and injuries from the 
-                     streets by 2024, through improved legislation, enforcement 
-                     and street design. Use this app to navigate the different efforts
-                     and to explore the various neighborhoods affected."
+            tabPanel("History", 
+                     h2(""),#use h5 or smaller
+                     "Vision Zero is a New York City program implemented 
+                     in 2014 aimed at reducing the number of traffic 
+                     related fatalities. Its goal is to eliminate all 
+                     deaths and injuries from the streets by 2024, 
+                     through improved legislation, community education 
+                     and engagement, law enforcement, and street design. 
+                     Use this app to navigate the different efforts and 
+                     to explore the various neighborhoods affected."
                      ),
             tabPanel("Overview",
                      selectizeInput(inputId = "boroS",label = h5("Select Borough"),
                                     choices = borochoice,
-                                    selected = "Brooklyn"),
+                                    selected = "Bronx"),
                      fluidRow(align = 'center',
                               h4(textOutput('IFCollisions'))
                      ),
@@ -45,12 +48,12 @@ navbarPage("NYC Vision Zero",
                      )
         )
     ),
-    tabPanel("Maps",
+    tabPanel("Boroughs",
              sidebarLayout(
                  sidebarPanel(
                      selectizeInput(inputId = "boroM",label = "Select Borough",
                                     choices = borochoice,
-                                    selected = "Brooklyn"),
+                                    selected = "Bronx"),
                      selectizeInput(inputId = 'yearM',label = "Select Year",
                                     choices = yearchoice,
                                     selected = '2019'),

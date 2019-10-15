@@ -1,6 +1,8 @@
 
 biketimeline = data.frame(Year = 2012:2019, 
                       Events = c(NA,"Citi Bike","Vision Zero",rep(NA,times = 5)))
+biketimelineQ = data.frame(Year = 2012:2019, 
+                          Events = c(NA, NA,"Vision Zero","Citi Bike",rep(NA,times = 4)))
 timeline = data.frame(Year = 2012:2019, 
                           Events = c(NA,NA,"Vision Zero",rep(NA,times = 5)))
 shinyServer(function(input, output) {
@@ -216,20 +218,52 @@ shinyServer(function(input, output) {
         )
     })
     output$TimeLineCIF <-renderGvis({
-        IFCollision() %>% inner_join(.,biketimeline, by = "Year") %>%
-            rename(., Cyclist.annotation = Events) %>% 
-            mutate(.,Year = as.character(Year))->
-            IFC
-        gvisLineChart(
-            data = IFC, xvar = "Year", 
-            yvar = c("Cyclists", "Cyclist.annotation", "Cyclist_Fatalities"),
-            options = list(legend = 'bottom', focusTarget = 'category',
-                           title = "Cyclist Injuries and Fatalities",
-                           annotations = "{style:'line'}",
-                           series = "[{targetAxisIndex:0, color:'red'},
+        if (input$boroS == 'Queens') {
+            IFCollision() %>% inner_join(.,biketimelineQ, by = "Year") %>%
+                rename(., Cyclist.annotation = Events) %>% 
+                mutate(.,Year = as.character(Year))->
+                IFC
+            gvisLineChart(
+                data = IFC, xvar = "Year", 
+                yvar = c("Cyclists", "Cyclist.annotation", "Cyclist_Fatalities"),
+                options = list(legend = 'bottom', focusTarget = 'category',
+                               title = "Cyclist Injuries and Fatalities",
+                               annotations = "{style:'line'}",
+                               series = "[{targetAxisIndex:0, color:'red'},
                            {targetAxisIndex:1, color:'blue'}]",
-                           vAxes ="[{title:'Injuries'}, {title:'Fatalities'}]")
-        )
+                               vAxes ="[{title:'Injuries'}, {title:'Fatalities'}]")
+            )
+        } else if (input$boroS %in% c("Manhattan", "Brooklyn")) {
+            IFCollision() %>% inner_join(.,biketimeline, by = "Year") %>%
+                rename(., Cyclist.annotation = Events) %>% 
+                mutate(.,Year = as.character(Year))->
+                IFC
+            gvisLineChart(
+                data = IFC, xvar = "Year", 
+                yvar = c("Cyclists", "Cyclist.annotation", "Cyclist_Fatalities"),
+                options = list(legend = 'bottom', focusTarget = 'category',
+                               title = "Cyclist Injuries and Fatalities",
+                               annotations = "{style:'line'}",
+                               series = "[{targetAxisIndex:0, color:'red'},
+                           {targetAxisIndex:1, color:'blue'}]",
+                               vAxes ="[{title:'Injuries'}, {title:'Fatalities'}]")
+            )
+        } else {
+            IFCollision() %>% inner_join(.,timeline, by = "Year") %>%
+                rename(., Cyclist.annotation = Events) %>% 
+                mutate(.,Year = as.character(Year))->
+                IFC
+            gvisLineChart(
+                data = IFC, xvar = "Year", 
+                yvar = c("Cyclists", "Cyclist.annotation", "Cyclist_Fatalities"),
+                options = list(legend = 'bottom', focusTarget = 'category',
+                               title = "Cyclist Injuries and Fatalities",
+                               annotations = "{style:'line'}",
+                               series = "[{targetAxisIndex:0, color:'red'},
+                           {targetAxisIndex:1, color:'blue'}]",
+                               vAxes ="[{title:'Injuries'}, {title:'Fatalities'}]")
+            )
+        }
     })
 
     output$TimePercentCIF <-renderGvis({
@@ -251,17 +285,45 @@ shinyServer(function(input, output) {
         "All Collisions"
     })
     output$TimeLineA <-renderGvis({
-        AllCollision() %>% inner_join(.,biketimeline, by = "Year") %>%
-            rename(., Cyclist.annotation = Events) %>% 
-            mutate(.,Year = as.character(Year))->
-            IFC
-        gvisLineChart(
-            data = IFC, xvar = "Year", 
-            yvar = c("Total", "Pedestrians", "Cyclists", "Cyclist.annotation"),
-            options = list(legend = 'bottom', focusTarget = 'category',
-                           annotations = "{style:'line'}",
-                           title = "All Traffic Accidents")
-        )
+            if (input$boroS == 'Queens') {
+                AllCollision() %>% 
+                    inner_join(.,biketimelineQ, by = "Year") %>%
+                    rename(., Cyclist.annotation = Events) %>% 
+                    mutate(.,Year = as.character(Year))->
+                    IFC
+                gvisLineChart(
+                data = IFC, xvar = "Year", 
+                yvar = c("Total", "Cyclists", "Cyclist.annotation", "Pedestrians"),
+                options = list(legend = 'bottom', focusTarget = 'category',
+                               annotations = "{style:'line'}",
+                               title = "All Traffic Accidents")
+                )
+            } else if (input$boroS %in% c("Manhattan", "Brooklyn")) {
+                    AllCollision() %>% 
+                        inner_join(.,biketimeline, by = "Year") %>%
+                        rename(., Cyclist.annotation = Events) %>% 
+                        mutate(.,Year = as.character(Year))->
+                        IFC
+                    gvisLineChart(
+                    data = IFC, xvar = "Year", 
+                    yvar = c("Total", "Cyclists", "Cyclist.annotation", "Pedestrians"),
+                    options = list(legend = 'bottom', focusTarget = 'category',
+                                   annotations = "{style:'line'}",
+                                   title = "All Traffic Accidents")
+                    )
+            } else {
+                    AllCollision() %>% inner_join(.,timeline, by = "Year") %>%
+                        rename(., Cyclist.annotation = Events) %>% 
+                        mutate(.,Year = as.character(Year))->
+                        IFC
+                    gvisLineChart(
+                        data = IFC, xvar = "Year", 
+                        yvar = c("Total", "Cyclists", "Cyclist.annotation", "Pedestrians"),
+                        options = list(legend = 'bottom', focusTarget = 'category',
+                                       annotations = "{style:'line'}",
+                                       title = "All Traffic Accidents")
+                    )
+            }
     })
     output$TimePercentA <-renderGvis({
         AllCollision() %>% 
