@@ -7,14 +7,15 @@ navbarPage("NYC Vision Zero",
         tabsetPanel(type = "pills",
             tabPanel("History", 
                      h2(""),#use h5 or smaller
-                     "Vision Zero is a New York City program implemented 
-                     in 2014 aimed at reducing the number of traffic 
-                     related fatalities. Its goal is to eliminate all 
-                     deaths and injuries from the streets by 2024, 
-                     through improved legislation, community education 
-                     and engagement, law enforcement, and street design. 
-                     Use this app to navigate the different efforts and 
-                     to explore the various neighborhoods affected."
+                     fluidRow("Vision Zero is a New York City program 
+                              implemented in 2014 aimed at reducing the number 
+                              of traffic related fatalities."), 
+                     fluidRow("Its goal is to eliminate all deaths and injuries 
+                              from the streets by 2024, through improved 
+                              legislation, community education and engagement, 
+                              law enforcement, and street design."), 
+                     fluidRow("Use this app to navigate the different efforts 
+                              and to explore the various neighborhoods affected.")
                      ),
             tabPanel("Overview",
                      selectizeInput(inputId = "boroS",label = h5("Select Borough"),
@@ -36,6 +37,11 @@ navbarPage("NYC Vision Zero",
 
                      ),
             tabPanel("Author",
+                     fluidRow(align = 'center',
+                              img(src = 'PaulLee1.jpg', width = '100')),
+                     fluidRow(align = 'center',
+                              h5("Paul (Kwang) Lee is a Data Science Fellow at NYC Data Science Academy")),
+                     fluidRow(h2("")),
                      fluidRow(h2("")),
                      fluidRow(align = 'center', 
                               a(img(src = 'GitHub-Mark-120px-plus.png',
