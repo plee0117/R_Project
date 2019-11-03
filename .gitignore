@@ -7,3 +7,5 @@
 *.shp
 *.geojson
 *.RData
+extras/
+rsconnect/
