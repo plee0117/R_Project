@@ -7,5 +7,6 @@
 *.shp
 *.geojson
 *.RData
+Crashes.R
 extras/
 rsconnect/
